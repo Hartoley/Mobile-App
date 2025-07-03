@@ -155,7 +155,7 @@ export default function AuthScreen() {
                   backgroundColor: "white",
                   borderRadius: 10,
                   fontSize: 13,
-                  height: 64,
+                  height: 54,
                   paddingHorizontal: 12,
                   marginBottom: 10,
                 }}
@@ -178,7 +178,7 @@ export default function AuthScreen() {
                   backgroundColor: "white",
                   borderRadius: 10,
                   fontSize: 13,
-                  height: 64,
+                  height: 54,
                   paddingHorizontal: 12,
                   marginBottom: 10,
                 }}
@@ -214,7 +214,7 @@ export default function AuthScreen() {
                     backgroundColor: "white",
                     borderRadius: 10,
                     fontSize: 13,
-                    height: 64,
+                    height: 54,
                     paddingHorizontal: 12,
                     marginBottom: 10,
                   }}
@@ -297,7 +297,7 @@ export default function AuthScreen() {
                   }}
                   labelStyle={{
                     color: "white",
-                    fontSize: 16,
+                    fontSize: 14,
                   }}
                 >
                   {isLoading ? (

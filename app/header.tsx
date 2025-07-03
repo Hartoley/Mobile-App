@@ -1,4 +1,6 @@
+import { useAuth } from "@/lib/autht-context";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -29,6 +31,9 @@ export default function YouTubeHeader({
   onNotificationsPress,
   onCastPress,
 }: YouTubeHeaderProps) {
+  const router = useRouter();
+  const { signOut } = useAuth();
+
   return (
     <View style={styles.container}>
       {/* Left menu icon */}
@@ -60,10 +65,6 @@ export default function YouTubeHeader({
 
       {/* Right icons */}
       <View style={styles.rightIcons}>
-        <TouchableOpacity onPress={onCastPress} style={styles.iconButton}>
-          <MaterialIcons name="cast" size={24} color="black" />
-        </TouchableOpacity>
-
         <TouchableOpacity
           onPress={onNotificationsPress}
           style={styles.iconButton}
@@ -73,6 +74,10 @@ export default function YouTubeHeader({
 
         <TouchableOpacity onPress={onProfilePress} style={styles.iconButton}>
           <Ionicons name="person-circle-outline" size={28} color="black" />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={signOut} style={styles.iconButton}>
+          <MaterialIcons name="logout" size={24} color="black" />
         </TouchableOpacity>
       </View>
     </View>
