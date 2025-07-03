@@ -14,7 +14,8 @@ export default function TabsLayout() {
 
           switch (route.name) {
             case "home":
-              iconName = "home-outline";
+              iconName = "home";
+
               break;
             case "cart":
               iconName = "bag-outline";
@@ -35,7 +36,7 @@ export default function TabsLayout() {
               <Ionicons
                 name={iconName}
                 size={20}
-                color={focused ? "rgb(0,9,42)" : "#ccc"}
+                color={focused ? "rgb(116,98,255)" : "#ccc"}
               />
             </View>
           );
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
     height: 64,
     alignSelf: "center", // <- centers horizontally
     borderRadius: 40,
-    backgroundColor: "#1c1d22",
+    backgroundColor: "rgb(0,20,77)",
     elevation: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },

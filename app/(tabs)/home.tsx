@@ -1,6 +1,6 @@
 import { useAuth } from "@/lib/autht-context";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import YouTubeHeader from "../header"; // import the header component
 
 export default function Index() {
@@ -9,26 +9,24 @@ export default function Index() {
   const [search, setSearch] = useState("");
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* YouTube-style header */}
-      <YouTubeHeader
-        showSearch={showSearch}
-        searchValue={search}
-        onSearchChange={setSearch}
-        onSearchSubmit={() => {
-          console.log("Search submitted:", search);
-          setShowSearch(false); // close search on submit
-        }}
-        onMenuPress={() => console.log("Menu pressed")}
-        onCastPress={() => console.log("Cast pressed")}
-        onNotificationsPress={() => console.log("Notifications pressed")}
-        onProfilePress={() => console.log("Profile pressed")}
-      />
+    <>
+      <View style={styles.container} className="flex-1 bg-gray-700">
+        <YouTubeHeader />
 
-      {/* Main content */}
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-lg text-pink-600">THis is Dash not index</Text>
+        <View style={styles.child} className="flex-1 "></View>
       </View>
-    </View>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#009af8",
+  },
+
+  child: {
+    backgroundColor: "red",
+    marginBottom: 50,
+    paddingHorizontal: 10,
+  },
+});
