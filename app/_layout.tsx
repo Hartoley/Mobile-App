@@ -23,7 +23,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     if (!user && !inAuthGroup && !isloadingUser) {
       router.replace("/");
     } else if (user && inAuthGroup && !isloadingUser) {
-      router.replace("/dash");
+      router.replace("/home");
     }
   }, [mounted, segment, user, isloadingUser]);
 
