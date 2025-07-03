@@ -16,15 +16,18 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const inAuthGroup = segment[0] === "auth";
-    if (mounted && !user && !inAuthGroup && !isloadingUser) {
-      router.replace("/auth");
-    } else if (mounted && user && inAuthGroup && !isloadingUser) {
-      router.replace("/");
-    }
-  }, [mounted, segment, user]);
+    if (!mounted) return;
 
-  if (!mounted) return null; // Prevent render until mounted
+    const inAuthGroup = segment[0] === "auth";
+
+    if (!user && !inAuthGroup && !isloadingUser) {
+      router.replace("/");
+    } else if (user && inAuthGroup && !isloadingUser) {
+      router.replace("/dash");
+    }
+  }, [mounted, segment, user, isloadingUser]);
+
+  if (!mounted) return null;
 
   return <>{children}</>;
 }
@@ -40,9 +43,7 @@ export default function RootLayout() {
                 headerShown: false,
               }}
             >
-              {/* Root landing page */}
               <Stack.Screen name="index" options={{ headerShown: false }} />
-              {/* Tabs group */}
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             </Stack>
           </RouteGuard>

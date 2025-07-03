@@ -8,19 +8,30 @@ import {
   View,
 } from "react-native";
 
+interface YouTubeHeaderProps {
+  showSearch?: boolean;
+  searchValue?: string;
+  onMenuPress: () => void;
+  onSearchChange: (text: string) => void;
+  onSearchSubmit: () => void;
+  onProfilePress: () => void;
+  onNotificationsPress: () => void;
+  onCastPress: () => void;
+}
+
 export default function YouTubeHeader({
   showSearch = false,
+  searchValue = "",
   onMenuPress,
   onSearchChange,
   onSearchSubmit,
   onProfilePress,
   onNotificationsPress,
   onCastPress,
-  searchValue = "",
-}) {
+}: YouTubeHeaderProps) {
   return (
-    <View className="" style={styles.container}>
-      {/* Left menu/back */}
+    <View style={styles.container}>
+      {/* Left menu icon */}
       <TouchableOpacity onPress={onMenuPress} style={styles.leftIcon}>
         <Ionicons name="menu" size={28} color="black" />
       </TouchableOpacity>
