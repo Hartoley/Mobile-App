@@ -312,6 +312,14 @@ export default function AuthScreen() {
                 </Button>
               </View>
 
+              <View className="flex-row items-center my-5">
+                <View className={`flex-1 h-px bg-gray-400`} />
+                <Text className={`mx-2 text-sm font-medium text-gray-700`}>
+                  {isSignUp ? "Sign Up with" : "Sign In with"}
+                </Text>
+                <View className={`flex-1 h-px bg-gray-400`} />
+              </View>
+
               <View
                 style={{
                   flexDirection: "row",
