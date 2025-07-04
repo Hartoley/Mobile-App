@@ -1,19 +1,62 @@
 import { useAuth } from "@/lib/autht-context";
-import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
-import YouTubeHeader from "../header"; // import the header component
+import { AntDesign } from "@expo/vector-icons"; // for heart and stars
+import React, { useEffect, useState } from "react";
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import YouTubeHeader from "../header"; // your header component
 
 export default function Index() {
   const { signOut } = useAuth();
-  const [showSearch, setShowSearch] = useState(false);
-  const [search, setSearch] = useState("");
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetch("https://dummyjson.com/products")
+      .then((res) => res.json())
+      .then((data) => setProducts(data.products))
+      .catch((error) => console.error("Error fetching products:", error));
+  }, []);
+
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      <Image source={{ uri: item.thumbnail }} style={styles.image} />
+      <TouchableOpacity style={styles.heart}>
+        <AntDesign name="hearto" size={16} color="#f55" />
+      </TouchableOpacity>
+      <Text style={styles.title} numberOfLines={1}>
+        {item.title}
+      </Text>
+      <View style={styles.row}>
+        {[...Array(5)].map((_, i) => (
+          <AntDesign
+            key={i}
+            name="star"
+            size={12}
+            color={i < Math.round(item.rating) ? "#facc15" : "#e5e7eb"}
+          />
+        ))}
+      </View>
+      <Text style={styles.price}>₹ {item.price}</Text>
+    </View>
+  );
 
   return (
     <>
-      <View style={styles.container} className="flex-1 bg-gray-700">
-        <YouTubeHeader />
-
-        <View style={styles.child} className="flex-1 "></View>
+      <YouTubeHeader />
+      <View style={styles.container}>
+        <FlatList
+          data={products}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          contentContainerStyle={styles.list}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+        />
       </View>
     </>
   );
@@ -21,12 +64,50 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#009af8",
+    flex: 1,
+    backgroundColor: "#f9fafb",
+    paddingTop: 10,
   },
-
-  child: {
-    backgroundColor: "red",
-    marginBottom: 50,
+  list: {
     paddingHorizontal: 10,
+    paddingBottom: 80,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 10,
+    marginBottom: 16,
+    width: "48%",
+    position: "relative",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  image: {
+    width: "100%",
+    height: 100,
+    borderRadius: 12,
+    resizeMode: "contain",
+  },
+  heart: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+  title: {
+    fontWeight: "600",
+    fontSize: 14,
+    marginTop: 8,
+  },
+  row: {
+    flexDirection: "row",
+    marginVertical: 4,
+  },
+  price: {
+    fontWeight: "700",
+    color: "#16a34a",
+    fontSize: 14,
   },
 });
