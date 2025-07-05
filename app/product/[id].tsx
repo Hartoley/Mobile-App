@@ -52,37 +52,37 @@ export default function ProductDetail() {
       </View>
 
       {/* Image Carousel */}
-      <FlatList
-        data={product.images}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        ref={flatListRef}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        keyExtractor={(_, i) => i.toString()}
-        renderItem={({ item }) => (
-          <Image source={{ uri: item }} style={styles.image} />
-        )}
-      />
-
-      {/* Dot Indicators */}
-      <View style={styles.dots}>
-        {product.images.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.dot,
-              activeIndex === index && {
-                backgroundColor: "rgb(0,28,105)",
-                width: 10,
-              },
-            ]}
-          />
-        ))}
+      <View style={styles.imageWrapper}>
+        <FlatList
+          data={product.images}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          ref={flatListRef}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          keyExtractor={(_, i) => i.toString()}
+          renderItem={({ item }) => (
+            <Image source={{ uri: item }} style={styles.image} />
+          )}
+        />
+        <View style={styles.dots}>
+          {product.images.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                activeIndex === index && {
+                  backgroundColor: "rgb(0,28,105)",
+                  width: 10,
+                },
+              ]}
+            />
+          ))}
+        </View>
       </View>
 
-      {/* Details Scroll */}
+      {/* Scrollable Details */}
       <ScrollView style={styles.content}>
         {/* Title & Price */}
         <View style={styles.titleRow}>
@@ -115,21 +115,26 @@ export default function ProductDetail() {
         {/* Description & Expanded Details */}
         <Text style={styles.description}>
           {showMore
-            ? `${product.description}\n\nBrand: ${product.brand}\nCategory: ${
+            ? `${product.description}\n\nCategory: ${
                 product.category
-              }\nStock: ${product.stock}\nAvailability: ${
-                product.availabilityStatus ?? "In stock"
-              }\nSKU: ${product.sku ?? "N/A"}\nWeight: ${
-                product.weight ?? "N/A"
-              }kg\nWarranty: ${
-                product.warrantyInformation ?? "N/A"
+              }\nBrand: ${product.brand}\nStock: ${
+                product.stock
+              }\nAvailability: ${
+                product.availabilityStatus || "In stock"
+              }\nSKU: ${product.sku || "N/A"}\nWeight: ${
+                product.weight || "-"
+              }kg\nDimensions: ${product.dimensions?.width} x ${
+                product.dimensions?.height
+              } x ${product.dimensions?.depth}\nWarranty: ${
+                product.warrantyInformation || "Not available"
               }\nShipping: ${
-                product.shippingInformation ?? "Ships fast"
-              }\nReturn Policy: ${product.returnPolicy ?? "Standard"}`
-            : `${product.description.slice(0, 120)}...`}
+                product.shippingInformation || "Ships soon"
+              }\nReturn Policy: ${
+                product.returnPolicy || "30 days"
+              }\nMin. Order: ${product.minimumOrderQuantity || 1}`
+            : `${product.description.slice(0, 360)}...`}
         </Text>
 
-        {/* Show More Toggle */}
         <TouchableOpacity onPress={() => setShowMore(!showMore)}>
           <Text style={styles.seeMore}>
             {showMore ? "Show Less ▲" : "See More ▼"}
@@ -142,7 +147,7 @@ export default function ProductDetail() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Review Modal */}
+      {/* Reviews Modal */}
       <Modal visible={reviewModal} animationType="slide">
         <View style={styles.modal}>
           <Text style={styles.reviewTitle}>Customer Reviews</Text>
@@ -192,16 +197,24 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "rgb(0,28,105)",
   },
-  image: {
-    width: width,
-    height: 260,
-    resizeMode: "contain",
+  imageWrapper: {
+    alignItems: "center",
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    overflow: "hidden",
     backgroundColor: "#fff",
+    marginHorizontal: 16,
+  },
+  image: {
+    width: width - 32,
+    height: 280,
+    resizeMode: "cover",
   },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
-    marginVertical: 10,
+    marginTop: 8,
+    marginBottom: 10,
     gap: 6,
   },
   dot: {
@@ -216,7 +229,8 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: 10,
+    marginTop: 10,
   },
   title: {
     fontSize: 15,
