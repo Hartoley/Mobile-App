@@ -1,6 +1,7 @@
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
+
 import {
   Dimensions,
   FlatList,
@@ -100,6 +101,68 @@ export default function ProductDetail() {
               color="#FFC107"
             />
           ))}
+        </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+
+              paddingVertical: 12,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                source={{
+                  uri: "https://i.pinimg.com/736x/e6/d8/00/e6d8009373c9625e7d80965dc8f842fa.jpg",
+                }} // replace with seller image
+                style={{ width: 50, height: 50, borderRadius: 25 }}
+              />
+              <View style={{ marginLeft: 10 }}>
+                <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+                  Jenny Doe
+                </Text>
+                <Text style={{ fontSize: 12, color: "grey" }}>Seller</Text>
+              </View>
+            </View>
+
+            <View style={{ marginLeft: 110, flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "rgb(112,167,245)",
+                  padding: 8,
+                  borderRadius: 20,
+                }}
+              >
+                <MaterialIcons name="chat" size={20} color="rgb(0,20,77)" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "rgb(112,167,245)",
+                  padding: 8,
+                  borderRadius: 20,
+                }}
+              >
+                <Feather name="phone" size={20} color="rgb(0,20,77)" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         {/* Tabs */}
