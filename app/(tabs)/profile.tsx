@@ -119,6 +119,10 @@ const Profile = () => {
             ]}
           />
         </View>
+
+        <TouchableOpacity style={styles.editButton}>
+          <Text style={styles.editText}>Edit profile</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -197,6 +201,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
+    alignContent: "flex-start",
   },
   scrollContainer: {
     flex: 1,
@@ -250,5 +255,32 @@ const styles = StyleSheet.create({
     color: "#000",
     maxWidth: "60%",
     textAlign: "right",
+  },
+  editButton: {
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#f5f3ff", // light purple background
+    borderWidth: 1,
+    borderColor: "#c4b5fd", // soft purple border
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center", // or center based on layout
+  },
+  editText: {
+    color: "#4c1d95", // deep purple text
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  logout: {
+    width: "90%",
+    height: 60,
+    alignSelf: "center",
+    backgroundColor: "white",
+    marginTop: 10,
+    borderRadius: 5,
+    justifyContent: "center",
+    paddingLeft: 10,
   },
 });
