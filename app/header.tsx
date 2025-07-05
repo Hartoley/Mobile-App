@@ -1,7 +1,8 @@
 import { useAuth } from "@/lib/autht-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import {
   StyleSheet,
@@ -17,6 +18,12 @@ export default function YouTubeHeader() {
   const [isNavigating, setIsNavigating] = useState(false);
 
   const isNavigatingRef = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      isNavigatingRef.current = false;
+    }, [])
+  );
 
   const handleNotificationPress = () => {
     if (isNavigatingRef.current) return;
