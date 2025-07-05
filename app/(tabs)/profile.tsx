@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     marginTop: 60,
     paddingHorizontal: 20,
-    gap: 12,
+    gap: 10,
   },
   label: {
     fontSize: 13,
@@ -135,14 +135,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10,
   },
   saveButton: {
     backgroundColor: "rgb(116,98,255)",
     paddingVertical: 12,
     borderRadius: 20,
     alignItems: "center",
-    marginTop: 20,
   },
   saveButtonText: {
     color: "white",
