@@ -1,5 +1,7 @@
+import { useAuth } from "@/lib/autht-context";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
+
 import {
   LayoutAnimation,
   Platform,
@@ -29,7 +31,7 @@ const EditProfile = () => {
     card: "Visa **** 5432",
     language: "English",
   });
-
+  const { signOut } = useAuth();
   const [settings, setSettings] = useState({
     notifications: true,
   });
@@ -52,6 +54,10 @@ const EditProfile = () => {
 
   const handleSave = () => {
     console.log("Updated Profile:", form, settings);
+  };
+
+  const handleLogout = () => {
+    console.log("Logging out...");
   };
 
   return (
@@ -153,12 +159,16 @@ const EditProfile = () => {
         >
           <Text style={styles.staticOption}>Help Center</Text>
           <Text style={styles.staticOption}>Return Policy - 30 days</Text>
-          <Text style={[styles.staticOption, { color: "#f44" }]}>Logout</Text>
         </Section>
 
         {/* SAVE BUTTON */}
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveText}>Save Changes</Text>
+        </TouchableOpacity>
+
+        {/* LOGOUT BUTTON (Always visible) */}
+        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+          <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -252,6 +262,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     paddingBottom: 10,
     marginBottom: 10,
+    paddingVertical: 10,
   },
   sectionTitle: {
     fontSize: 14,
@@ -266,16 +277,30 @@ const styles = StyleSheet.create({
     color: "#222",
   },
   saveButton: {
-    backgroundColor: "rgb(116,98,255)",
+    backgroundColor: "rgb(0,20,77)",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 20,
-    marginBottom: 40,
   },
   saveText: {
     color: "#fff",
     fontSize: 15,
     fontWeight: "600",
+  },
+  logoutButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#f44",
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 50,
+  },
+  logoutText: {
+    color: "#f44",
+    fontWeight: "600",
+    fontSize: 14,
   },
 });

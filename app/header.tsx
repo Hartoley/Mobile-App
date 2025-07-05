@@ -30,9 +30,9 @@ export default function YouTubeHeader() {
         </View>
 
         <View className="flex-row gap-2">
-          <TouchableOpacity onPress={signOut} style={styles.bellWrapper}>
+          {/* <TouchableOpacity onPress={signOut} style={styles.bellWrapper}>
             <Ionicons name="log-out" size={16} color="white" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity style={styles.bellWrapper}>
             <Ionicons name="notifications-outline" size={16} color="white" />
