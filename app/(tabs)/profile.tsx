@@ -1,22 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Image,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 
 const Profile = () => {
-  const user = {
+  const [user, setUser] = useState({
     name: "Sakeena Zayn",
-    phone: "+1 (555) 123-4567",
-    address: "123 Main St, New York, NY 10001",
+    phone: "+123 456 7890",
+    address: "123 Main Street, New York, USA",
+    email: "sakeena@example.com",
     avatar:
       "https://i.pinimg.com/736x/ab/d5/bf/abd5bf400a1475b76d8614cf6e815b8b.jpg",
     cover:
       "https://i.pinimg.com/736x/23/2e/d9/232ed9ce4e9a2829dbd5f7b2b909d8bf.jpg",
+    notifications: true,
+  });
+
+  const handleChange = (key, value) => {
+    setUser({ ...user, [key]: value });
   };
 
   return (
@@ -29,27 +37,47 @@ const Profile = () => {
       </View>
 
       <View style={styles.infoContainer}>
-        <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.phone}>{user.phone}</Text>
+        <Text style={styles.label}>Full Name</Text>
+        <TextInput
+          value={user.name}
+          onChangeText={(text) => handleChange("name", text)}
+          style={styles.input}
+        />
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Delivery Address</Text>
-          <Text style={styles.value}>{user.address}</Text>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionText}>Edit Address</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.label}>Phone Number</Text>
+        <TextInput
+          value={user.phone}
+          onChangeText={(text) => handleChange("phone", text)}
+          style={styles.input}
+          keyboardType="phone-pad"
+        />
 
-        <View style={styles.section}>
+        <Text style={styles.label}>Address</Text>
+        <TextInput
+          value={user.address}
+          onChangeText={(text) => handleChange("address", text)}
+          style={styles.input}
+          multiline
+        />
+
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          value={user.email}
+          onChangeText={(text) => handleChange("email", text)}
+          style={styles.input}
+          keyboardType="email-address"
+        />
+
+        <View style={styles.switchRow}>
           <Text style={styles.label}>Notifications</Text>
-          <Text style={styles.value}>Enabled</Text>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionText}>Manage Notifications</Text>
-          </TouchableOpacity>
+          <Switch
+            value={user.notifications}
+            onValueChange={(val) => handleChange("notifications", val)}
+          />
         </View>
 
-        <TouchableOpacity style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Log Out</Text>
+        <TouchableOpacity style={styles.saveButton}>
+          <Text style={styles.saveButtonText}>Save Changes</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -65,7 +93,6 @@ const styles = StyleSheet.create({
   },
   coverContainer: {
     height: 180,
-    position: "relative",
     backgroundColor: "rgb(0,20,77)",
   },
   coverImage: {
@@ -90,60 +117,34 @@ const styles = StyleSheet.create({
   infoContainer: {
     marginTop: 60,
     paddingHorizontal: 20,
-    alignItems: "center",
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "rgb(0,20,77)",
-  },
-  phone: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 4,
-  },
-  section: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 20,
-    width: "100%",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    gap: 12,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "rgb(0,20,77)",
-    marginBottom: 4,
-  },
-  value: {
     fontSize: 13,
     color: "#333",
-    marginBottom: 10,
+    fontWeight: "600",
   },
-  actionButton: {
+  input: {
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 10,
+    fontSize: 14,
+    color: "#000",
+  },
+  switchRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  saveButton: {
     backgroundColor: "rgb(116,98,255)",
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    alignSelf: "flex-start",
-  },
-  actionText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  logoutButton: {
-    backgroundColor: "#ff5a5f",
-    borderRadius: 20,
     paddingVertical: 12,
-    paddingHorizontal: 40,
-    marginTop: 30,
+    borderRadius: 20,
+    alignItems: "center",
+    marginTop: 20,
   },
-  logoutText: {
+  saveButtonText: {
     color: "white",
     fontWeight: "bold",
   },
