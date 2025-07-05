@@ -1,6 +1,6 @@
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -23,6 +23,8 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [showMore, setShowMore] = useState(false);
   const [reviewModal, setReviewModal] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef();
 
   useEffect(() => {
     fetch(`https://dummyjson.com/products/${id}`)
@@ -31,41 +33,56 @@ export default function ProductDetail() {
       .catch(console.error);
   }, [id]);
 
+  const handleScroll = (event) => {
+    const slide = Math.round(event.nativeEvent.contentOffset.x / width);
+    setActiveIndex(slide);
+  };
+
   if (!product) return <Text style={{ padding: 20 }}>Loading...</Text>;
 
   return (
     <View style={styles.container}>
-      {/* Header Row */}
+      {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color="rgb(0,28,105)" />
         </TouchableOpacity>
         <Text style={styles.headerText}>STYLLA FASHION</Text>
-        <TouchableOpacity>
-          <AntDesign name="hearto" size={20} color="#f44" />
-        </TouchableOpacity>
+        <AntDesign name="hearto" size={20} color="#f44" />
       </View>
 
-      {/* Swiper for Images */}
+      {/* Image Carousel */}
       <FlatList
+        data={product.images}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        data={product.images}
-        keyExtractor={(item, i) => i.toString()}
+        ref={flatListRef}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        keyExtractor={(_, i) => i.toString()}
         renderItem={({ item }) => (
           <Image source={{ uri: item }} style={styles.image} />
         )}
       />
 
-      {/* Indicators */}
+      {/* Dot Indicators */}
       <View style={styles.dots}>
         {product.images.map((_, index) => (
-          <View key={index} style={styles.dot} />
+          <View
+            key={index}
+            style={[
+              styles.dot,
+              activeIndex === index && {
+                backgroundColor: "rgb(0,28,105)",
+                width: 10,
+              },
+            ]}
+          />
         ))}
       </View>
 
-      {/* Scrollable Section */}
+      {/* Details Scroll */}
       <ScrollView style={styles.content}>
         {/* Title & Price */}
         <View style={styles.titleRow}>
@@ -95,21 +112,31 @@ export default function ProductDetail() {
           </TouchableOpacity>
         </View>
 
-        {/* Product Details */}
+        {/* Description & Expanded Details */}
         <Text style={styles.description}>
           {showMore
-            ? `${product.description}\n\nCategory: ${product.category}\nBrand: ${product.brand}\nStock: ${product.stock}\nAvailability: ${product.availabilityStatus}\nSKU: ${product.sku}\nSize: ${product.weight}kg\nDimension: ${product.dimensions.width} x ${product.dimensions.height} x ${product.dimensions.depth}\nWarranty: ${product.warrantyInformation}\nShipping: ${product.shippingInformation}\nReturn Policy: ${product.returnPolicy}\nMin. Order: ${product.minimumOrderQuantity}`
+            ? `${product.description}\n\nBrand: ${product.brand}\nCategory: ${
+                product.category
+              }\nStock: ${product.stock}\nAvailability: ${
+                product.availabilityStatus ?? "In stock"
+              }\nSKU: ${product.sku ?? "N/A"}\nWeight: ${
+                product.weight ?? "N/A"
+              }kg\nWarranty: ${
+                product.warrantyInformation ?? "N/A"
+              }\nShipping: ${
+                product.shippingInformation ?? "Ships fast"
+              }\nReturn Policy: ${product.returnPolicy ?? "Standard"}`
             : `${product.description.slice(0, 120)}...`}
         </Text>
 
-        {/* See More */}
+        {/* Show More Toggle */}
         <TouchableOpacity onPress={() => setShowMore(!showMore)}>
           <Text style={styles.seeMore}>
             {showMore ? "Show Less ▲" : "See More ▼"}
           </Text>
         </TouchableOpacity>
 
-        {/* Add to Cart Button */}
+        {/* Add to Cart */}
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Add to Cart</Text>
         </TouchableOpacity>
@@ -119,11 +146,11 @@ export default function ProductDetail() {
       <Modal visible={reviewModal} animationType="slide">
         <View style={styles.modal}>
           <Text style={styles.reviewTitle}>Customer Reviews</Text>
-          {product.reviews.map((rev, i) => (
+          {product.reviews?.map((rev, i) => (
             <View key={i} style={styles.reviewBox}>
               <Text style={styles.reviewer}>{rev.reviewerName}</Text>
               <Text style={styles.comment}>"{rev.comment}"</Text>
-              <Text style={styles.rating}>
+              <View style={styles.rating}>
                 {[...Array(5)].map((_, j) => (
                   <AntDesign
                     key={j}
@@ -132,7 +159,7 @@ export default function ProductDetail() {
                     color="#FFC107"
                   />
                 ))}
-              </Text>
+              </View>
             </View>
           ))}
           <TouchableOpacity
@@ -167,8 +194,8 @@ const styles = StyleSheet.create({
   },
   image: {
     width: width,
-    height: 280,
-    resizeMode: "cover",
+    height: 260,
+    resizeMode: "contain",
     backgroundColor: "#fff",
   },
   dots: {
@@ -178,8 +205,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dot: {
-    width: 8,
-    height: 8,
+    width: 6,
+    height: 6,
     backgroundColor: "#ccc",
     borderRadius: 4,
   },
