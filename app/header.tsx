@@ -1,5 +1,6 @@
 import { useAuth } from "@/lib/autht-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 
 import {
@@ -12,6 +13,11 @@ import {
 
 export default function YouTubeHeader() {
   const { signOut } = useAuth();
+  const router = useRouter();
+
+  const edit = () => {
+    router.push("/editProfile");
+  };
 
   return (
     <View style={styles.container}>
@@ -50,8 +56,8 @@ export default function YouTubeHeader() {
           />
         </View>
 
-        <TouchableOpacity style={styles.filterButton}>
-          <MaterialCommunityIcons name="tune-variant" size={16} color="#fff" />
+        <TouchableOpacity style={styles.filterButton} onPress={edit}>
+          <Ionicons name="settings" size={18} color="white" />
         </TouchableOpacity>
       </View>
     </View>

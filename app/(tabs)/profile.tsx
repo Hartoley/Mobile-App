@@ -1,3 +1,5 @@
+import { useAuth } from "@/lib/autht-context";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Dimensions,
@@ -30,10 +32,16 @@ const Profile = () => {
     settings: false,
     support: false,
   });
+  const { signOut } = useAuth();
 
   const toggleSection = (key: keyof typeof sections) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+  const router = useRouter();
+
+  const edit = () => {
+    router.push("/editProfile");
   };
 
   return (
@@ -115,12 +123,16 @@ const Profile = () => {
               { label: "Help Center", value: "FAQs and Contact" },
               { label: "Return Policy", value: "30-day return" },
               { label: "Privacy Settings", value: "Manage your data" },
-              { label: "Log Out", value: "Log out from app" },
+              {
+                label: "Log Out",
+                value: "Log out from app",
+                onPress: signOut,
+              },
             ]}
           />
         </View>
 
-        <TouchableOpacity style={styles.editButton}>
+        <TouchableOpacity onPress={edit} style={styles.editButton}>
           <Text style={styles.editText}>Edit profile</Text>
         </TouchableOpacity>
       </ScrollView>
