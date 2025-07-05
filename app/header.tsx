@@ -1,7 +1,7 @@
 import { useAuth } from "@/lib/autht-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useRef, useState } from "react";
 
 import {
   StyleSheet,
@@ -14,7 +14,16 @@ import {
 export default function YouTubeHeader() {
   const { signOut } = useAuth();
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
 
+  const isNavigatingRef = useRef(false);
+
+  const handleNotificationPress = () => {
+    if (isNavigatingRef.current) return;
+
+    isNavigatingRef.current = true; // block further presses immediately
+    router.push("/notification");
+  };
   const edit = () => {
     router.push("/editProfile");
   };
@@ -34,7 +43,11 @@ export default function YouTubeHeader() {
             <Ionicons name="log-out" size={16} color="white" />
           </TouchableOpacity> */}
 
-          <TouchableOpacity style={styles.bellWrapper}>
+          <TouchableOpacity
+            style={styles.bellWrapper}
+            onPress={handleNotificationPress}
+            disabled={isNavigating}
+          >
             <Ionicons name="notifications-outline" size={16} color="white" />
           </TouchableOpacity>
         </View>
