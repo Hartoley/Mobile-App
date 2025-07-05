@@ -1,8 +1,11 @@
 import { AntDesign } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
+  Dimensions,
+  FlatList,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,102 +13,137 @@ import {
   View,
 } from "react-native";
 
-interface Product {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  thumbnail: string;
-}
+const { width } = Dimensions.get("window");
 
-export default function ProductPage() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
+export default function ProductDetail() {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { id } = route.params;
+
+  const [product, setProduct] = useState(null);
+  const [showMore, setShowMore] = useState(false);
+  const [reviewModal, setReviewModal] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetch(`https://dummyjson.com/products/${id}`)
-        .then((res) => res.json())
-        .then(setProduct);
-    }
+    fetch(`https://dummyjson.com/products/${id}`)
+      .then((res) => res.json())
+      .then(setProduct)
+      .catch(console.error);
   }, [id]);
 
   if (!product) return <Text style={{ padding: 20 }}>Loading...</Text>;
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      {/* Header Row */}
       <View style={styles.headerRow}>
-        <AntDesign name="arrowleft" size={24} color="rgb(0,28,105)" />
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <AntDesign name="arrowleft" size={24} color="rgb(0,28,105)" />
+        </TouchableOpacity>
         <Text style={styles.headerText}>STYLLA FASHION</Text>
-        <AntDesign name="hearto" size={20} color="#f44" />
+        <TouchableOpacity>
+          <AntDesign name="hearto" size={20} color="#f44" />
+        </TouchableOpacity>
       </View>
 
-      <Image source={{ uri: product.thumbnail }} style={styles.image} />
-
-      {/* Dots */}
-      <View style={styles.dots}>
-        {[...Array(5)].map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              i === 2 && { backgroundColor: "rgb(0,28,105)" },
-            ]}
-          />
-        ))}
-      </View>
-
-      {/* Title and Price */}
-      <View style={styles.titleRow}>
-        <Text style={styles.title}>{product.title}</Text>
-        <Text style={styles.price}>₦ {product.price}</Text>
-      </View>
-
-      {/* Stars */}
-      <View style={{ flexDirection: "row", marginBottom: 8 }}>
-        {[...Array(4)].map((_, i) => (
-          <AntDesign key={i} name="star" size={16} color="#FFC107" />
-        ))}
-        <AntDesign name="staro" size={16} color="#FFC107" />
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabRow}>
-        <Text style={[styles.tabText, { color: "rgb(0,28,105)" }]}>
-          Details
-        </Text>
-        <Text style={styles.tabText}>Review</Text>
-      </View>
-
-      <Text style={styles.description}>
-        {product.description.slice(0, 150)}...
-      </Text>
-
-      <Text style={styles.label}>Product Size</Text>
-      <View style={styles.sizeRow}>
-        {["6", "6.5", "7", "7.5", "8", "8.5"].map((s) => (
-          <View key={s} style={styles.sizeCircle}>
-            <Text style={styles.sizeText}>{s}</Text>
-          </View>
-        ))}
-      </View>
-
-      <Text style={styles.label}>Color Select</Text>
-      <View style={styles.colorRow}>
-        {["#9333ea", "#ea580c", "#d6c421", "#22d3ee", "#7c3aed"].map(
-          (color) => (
-            <View
-              key={color}
-              style={[styles.colorDot, { backgroundColor: color }]}
-            />
-          )
+      {/* Swiper for Images */}
+      <FlatList
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        data={product.images}
+        keyExtractor={(item, i) => i.toString()}
+        renderItem={({ item }) => (
+          <Image source={{ uri: item }} style={styles.image} />
         )}
+      />
+
+      {/* Indicators */}
+      <View style={styles.dots}>
+        {product.images.map((_, index) => (
+          <View key={index} style={styles.dot} />
+        ))}
       </View>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Add to Cart</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      {/* Scrollable Section */}
+      <ScrollView style={styles.content}>
+        {/* Title & Price */}
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{product.title}</Text>
+          <Text style={styles.price}>₦ {product.price}</Text>
+        </View>
+
+        {/* Rating */}
+        <View style={{ flexDirection: "row", marginBottom: 6 }}>
+          {[...Array(5)].map((_, i) => (
+            <AntDesign
+              key={i}
+              name={i < Math.round(product.rating) ? "star" : "staro"}
+              size={14}
+              color="#FFC107"
+            />
+          ))}
+        </View>
+
+        {/* Tabs */}
+        <View style={styles.tabRow}>
+          <Text style={[styles.tabText, { color: "rgb(0,28,105)" }]}>
+            Details
+          </Text>
+          <TouchableOpacity onPress={() => setReviewModal(true)}>
+            <Text style={styles.tabText}>Review</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Product Details */}
+        <Text style={styles.description}>
+          {showMore
+            ? `${product.description}\n\nCategory: ${product.category}\nBrand: ${product.brand}\nStock: ${product.stock}\nAvailability: ${product.availabilityStatus}\nSKU: ${product.sku}\nSize: ${product.weight}kg\nDimension: ${product.dimensions.width} x ${product.dimensions.height} x ${product.dimensions.depth}\nWarranty: ${product.warrantyInformation}\nShipping: ${product.shippingInformation}\nReturn Policy: ${product.returnPolicy}\nMin. Order: ${product.minimumOrderQuantity}`
+            : `${product.description.slice(0, 120)}...`}
+        </Text>
+
+        {/* See More */}
+        <TouchableOpacity onPress={() => setShowMore(!showMore)}>
+          <Text style={styles.seeMore}>
+            {showMore ? "Show Less ▲" : "See More ▼"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Add to Cart Button */}
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText}>Add to Cart</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Review Modal */}
+      <Modal visible={reviewModal} animationType="slide">
+        <View style={styles.modal}>
+          <Text style={styles.reviewTitle}>Customer Reviews</Text>
+          {product.reviews.map((rev, i) => (
+            <View key={i} style={styles.reviewBox}>
+              <Text style={styles.reviewer}>{rev.reviewerName}</Text>
+              <Text style={styles.comment}>"{rev.comment}"</Text>
+              <Text style={styles.rating}>
+                {[...Array(5)].map((_, j) => (
+                  <AntDesign
+                    key={j}
+                    name={j < rev.rating ? "star" : "staro"}
+                    size={12}
+                    color="#FFC107"
+                  />
+                ))}
+              </Text>
+            </View>
+          ))}
+          <TouchableOpacity
+            onPress={() => setReviewModal(false)}
+            style={styles.modalClose}
+          >
+            <Text style={styles.modalCloseText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
@@ -113,114 +151,126 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",
-    padding: 16,
-    paddingTop: 50,
+    paddingTop: 40,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingHorizontal: 16,
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   headerText: {
+    fontSize: 13,
     fontWeight: "600",
     color: "rgb(0,28,105)",
-    fontSize: 14,
   },
   image: {
-    width: "100%",
-    height: 240,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    width: width,
+    height: 280,
+    resizeMode: "cover",
     backgroundColor: "#fff",
-    marginBottom: 6,
   },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 6,
     marginVertical: 10,
+    gap: 6,
   },
   dot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
     backgroundColor: "#ccc",
+    borderRadius: 4,
+  },
+  content: {
+    paddingHorizontal: 16,
   },
   titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: 4,
   },
   title: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "700",
     color: "#111",
   },
   price: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "rgb(0,28,105)",
   },
   tabRow: {
     flexDirection: "row",
     gap: 24,
-    marginVertical: 12,
+    marginVertical: 10,
   },
   tabText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "rgb(0,28,105)",
+    color: "#333",
   },
   description: {
     fontSize: 12,
-    color: "#555",
-    marginBottom: 16,
+    color: "#444",
+    marginBottom: 12,
+    lineHeight: 18,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#222",
-    marginBottom: 8,
-  },
-  sizeRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 16,
-  },
-  sizeCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderColor: "#ddd",
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  sizeText: {
+  seeMore: {
     fontSize: 12,
-    color: "#000",
-  },
-  colorRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 24,
-  },
-  colorDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    color: "#0055cc",
+    marginBottom: 20,
+    textAlign: "right",
   },
   button: {
     backgroundColor: "rgb(0,28,105)",
-    borderRadius: 10,
     paddingVertical: 14,
+    borderRadius: 10,
     alignItems: "center",
+    marginBottom: 60,
   },
   buttonText: {
     color: "#fff",
+    fontSize: 13,
     fontWeight: "600",
-    fontSize: 15,
+  },
+  modal: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#f4f4f4",
+  },
+  reviewTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 16,
+    color: "rgb(0,28,105)",
+  },
+  reviewBox: {
+    marginBottom: 16,
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 8,
+  },
+  reviewer: {
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  comment: {
+    fontSize: 12,
+    color: "#333",
+    marginBottom: 6,
+  },
+  rating: {
+    flexDirection: "row",
+  },
+  modalClose: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  modalCloseText: {
+    fontSize: 13,
+    color: "#0055cc",
   },
 });
