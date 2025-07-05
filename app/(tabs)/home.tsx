@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
     right: 10,
   },
   title: {
-    fontWeight: "600",
-    fontSize: 14,
+    fontWeight: "400",
+    fontSize: 12,
     marginTop: 8,
     color: "rgb(0,20,77)",
     fontFamily: "serif",
@@ -169,6 +169,6 @@ const styles = StyleSheet.create({
   price: {
     fontWeight: "700",
     color: "rgb(0,20,77)",
-    fontSize: 14,
+    fontSize: 12,
   },
 });

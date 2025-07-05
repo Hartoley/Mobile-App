@@ -132,7 +132,7 @@ export default function ProductDetail() {
               }\nReturn Policy: ${
                 product.returnPolicy || "30 days"
               }\nMin. Order: ${product.minimumOrderQuantity || 1}`
-            : `${product.description.slice(0, 360)}...`}
+            : `${product.description}`}
         </Text>
 
         <TouchableOpacity onPress={() => setShowMore(!showMore)}>
