@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -37,10 +38,34 @@ const ChatScreen = () => {
       setMessages((prev) => [...prev, newMessage]);
       setInput("");
 
-      // Scroll to end after sending
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
+    }
+  };
+
+  const handleAttach = async () => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        copyToCacheDirectory: true,
+        multiple: false,
+        type: "*/*",
+      });
+
+      if (res.type === "success") {
+        const newMessage = {
+          id: Date.now().toString(),
+          text: `Sent a file: ${res.name}`,
+          sender: "me",
+        };
+        setMessages((prev) => [...prev, newMessage]);
+
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    } catch (err) {
+      console.error("Document pick error:", err);
     }
   };
 
@@ -90,13 +115,24 @@ const ChatScreen = () => {
           />
 
           <View style={styles.inputContainer}>
-            <TextInput
-              value={input}
-              onChangeText={setInput}
-              placeholder="Type a message"
-              style={styles.input}
-              placeholderTextColor="#888"
-            />
+            <View style={styles.inputWrapper}>
+              <TouchableOpacity
+                onPress={handleAttach}
+                style={styles.iconButton}
+              >
+                <Ionicons name="attach" size={20} color="#555" />
+              </TouchableOpacity>
+              <View>
+                <TextInput
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="Type a message"
+                  style={styles.input}
+                  placeholderTextColor="#888"
+                />
+              </View>
+            </View>
+
             <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
               <Ionicons name="send" size={20} color="white" />
             </TouchableOpacity>
@@ -149,20 +185,32 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: "row",
+    alignItems: "center",
     padding: 10,
-    backgroundColor: "rgb(215,223,243)",
     borderTopWidth: 1,
     borderTopColor: "#ddd",
-    alignItems: "center",
+    width: "100%",
+
+    marginBottom: 20,
   },
-  input: {
+  iconButton: {
+    marginRight: 8,
+  },
+  inputWrapper: {
     flex: 1,
     backgroundColor: "#f0f0f0",
-    borderRadius: 20,
+    height: 50,
+    borderRadius: 30,
     paddingHorizontal: 12,
-    marginRight: 10,
+    alignItems: "center",
+    flexDirection: "row",
+    width: "100%",
+  },
+  input: {
     color: "#333",
-    marginBottom: 5,
+    // backgroundColor: "white",
+    width: 250,
+    borderRadius: 20,
   },
   sendButton: {
     backgroundColor: "rgb(116,98,255)",
@@ -171,5 +219,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
+    marginLeft: 8,
   },
 });

@@ -12,22 +12,85 @@ import {
 
 const chats = [
   {
-    id: "1",
-    name: "Jane Doe",
-    lastMessage: "Hey, how are you?",
-    time: "10:45 AM",
+    id: "11",
+    name: "Liam Carter",
+    lastMessage: "Just arrived!",
+    time: "5:22 PM",
     avatar:
-      "https://i.pinimg.com/736x/bf/9c/5c/bf9c5c76fd2e3aa8b0ca595d4a1a278e.jpg",
+      "https://i.pinimg.com/736x/04/c6/9a/04c69ae5d3e4691a50dc5988a9f469a9.jpg",
   },
   {
-    id: "2",
-    name: "John Smith",
-    lastMessage: "Let's catch up later.",
-    time: "9:30 AM",
+    id: "12",
+    name: "Noah Williams",
+    lastMessage: "Okay 👍",
+    time: "4:10 PM",
     avatar:
-      "https://i.pinimg.com/736x/8b/8a/0e/8b8a0ee0481f7f86c4aaedb087b78bca.jpg",
+      "https://i.pinimg.com/736x/ce/68/f6/ce68f6a16a33b0b988c1d3518d2b8008.jpg",
   },
-  // Add more dummy chats as needed
+  {
+    id: "13",
+    name: "Olivia Martin",
+    lastMessage: "Hahaha 😂",
+    time: "3:47 PM",
+    avatar:
+      "https://i.pinimg.com/736x/77/72/0a/77720a33478bd39ca0ab45cfbdf36115.jpg",
+  },
+  {
+    id: "14",
+    name: "Emma Garcia",
+    lastMessage: "Let’s do it!",
+    time: "2:30 PM",
+    avatar:
+      "https://i.pinimg.com/736x/64/2f/8d/642f8d8c875c1ce1e0da9010e6b0ec9c.jpg",
+  },
+  {
+    id: "15",
+    name: "Ava Martinez",
+    lastMessage: "See you tomorrow.",
+    time: "1:05 PM",
+    avatar:
+      "https://i.pinimg.com/736x/64/2f/8d/642f8d8c875c1ce1e0da9010e6b0ec9c.jpg",
+  },
+  {
+    id: "16",
+    name: "Ethan Davis",
+    lastMessage: "Still at work 😩",
+    time: "12:40 PM",
+    avatar:
+      "https://i.pinimg.com/736x/ec/a8/bc/eca8bcd7fbcfd9f057a377db4b53d7f9.jpg",
+  },
+  {
+    id: "17",
+    name: "Mia Robinson",
+    lastMessage: "Awesome, thanks!",
+    time: "11:15 AM",
+    avatar:
+      "https://i.pinimg.com/736x/6d/2d/2a/6d2d2a88ee9fbafdc0927e57896f2451.jpg",
+  },
+  {
+    id: "18",
+    name: "Lucas Thompson",
+    lastMessage: "Where are you?",
+    time: "10:00 AM",
+    avatar:
+      "https://i.pinimg.com/736x/45/43/d4/4543d4be4a5dd6173b75903a2ac4aede.jpg",
+  },
+  {
+    id: "19",
+    name: "Amelia White",
+    lastMessage: "Be right back.",
+    time: "Yesterday",
+    avatar:
+      "https://i.pinimg.com/736x/1d/29/a7/1d29a72f408a97affd507d93bffab473.jpg",
+  },
+  {
+    id: "20",
+    name: "Benjamin Scott",
+    lastMessage: "Got it!",
+    time: "Monday",
+    avatar:
+      "https://i.pinimg.com/736x/e6/16/ed/e616ede4d23bba364f1d8acb53d92d0c.jpg",
+  },
 ];
 
 const AllChatsScreen = () => {
@@ -79,6 +142,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",
+    paddingBottom: "13%",
   },
   header: {
     backgroundColor: "rgb(0,20,77)",
