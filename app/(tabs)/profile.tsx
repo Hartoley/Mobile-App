@@ -1,98 +1,175 @@
 import React, { useState } from "react";
 import {
   Image,
+  LayoutAnimation,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   TouchableOpacity,
+  UIManager,
   View,
 } from "react-native";
 
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 const Profile = () => {
-  const [user, setUser] = useState({
-    name: "Sakeena Zayn",
-    phone: "+123 456 7890",
-    address: "123 Main Street, New York, USA",
-    email: "sakeena@example.com",
-    avatar:
-      "https://i.pinimg.com/736x/ab/d5/bf/abd5bf400a1475b76d8614cf6e815b8b.jpg",
-    cover:
-      "https://i.pinimg.com/736x/23/2e/d9/232ed9ce4e9a2829dbd5f7b2b909d8bf.jpg",
-    notifications: true,
+  const [sections, setSections] = useState({
+    account: true,
+    orders: false,
+    payments: false,
+    settings: false,
+    support: false,
   });
 
-  const handleChange = (key, value) => {
-    setUser({ ...user, [key]: value });
+  const toggleSection = (key: keyof typeof sections) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 120 }} // ≈ 15vh
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Cover & Avatar */}
       <View style={styles.coverContainer}>
-        <Image source={{ uri: user.cover }} style={styles.coverImage} />
+        <Image
+          source={{
+            uri: "https://i.pinimg.com/736x/23/2e/d9/232ed9ce4e9a2829dbd5f7b2b909d8bf.jpg",
+          }}
+          style={styles.coverImage}
+        />
         <View style={styles.avatarContainer}>
-          <Image source={{ uri: user.avatar }} style={styles.avatar} />
-        </View>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Text style={styles.label}>Full Name</Text>
-        <TextInput
-          value={user.name}
-          onChangeText={(text) => handleChange("name", text)}
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Phone Number</Text>
-        <TextInput
-          value={user.phone}
-          onChangeText={(text) => handleChange("phone", text)}
-          style={styles.input}
-          keyboardType="phone-pad"
-        />
-
-        <Text style={styles.label}>Address</Text>
-        <TextInput
-          value={user.address}
-          onChangeText={(text) => handleChange("address", text)}
-          style={styles.input}
-          multiline
-        />
-
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          value={user.email}
-          onChangeText={(text) => handleChange("email", text)}
-          style={styles.input}
-          keyboardType="email-address"
-        />
-
-        <View style={styles.switchRow}>
-          <Text style={styles.label}>Notifications</Text>
-          <Switch
-            value={user.notifications}
-            onValueChange={(val) => handleChange("notifications", val)}
+          <Image
+            source={{
+              uri: "https://i.pinimg.com/736x/ab/d5/bf/abd5bf400a1475b76d8614cf6e815b8b.jpg",
+            }}
+            style={styles.avatar}
           />
         </View>
-
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save Changes</Text>
-        </TouchableOpacity>
       </View>
+
+      {/* USER NAME & EMAIL */}
+      <View style={styles.nameContainer}>
+        <Text style={styles.name}>Sakeena Zayn</Text>
+        <Text style={styles.email}>sakeena@example.com</Text>
+      </View>
+
+      {/* Section List */}
+      <Section
+        title="Account Info"
+        expanded={sections.account}
+        onToggle={() => toggleSection("account")}
+        items={[
+          { label: "Phone Number", value: "+123 456 7890" },
+          { label: "Address", value: "123 Main Street, New York, USA" },
+          { label: "Member Since", value: "March 2023" },
+        ]}
+      />
+      <Section
+        title="Orders & Wishlist"
+        expanded={sections.orders}
+        onToggle={() => toggleSection("orders")}
+        items={[
+          { label: "My Orders", value: "View your orders" },
+          { label: "Wishlist", value: "Saved items" },
+          { label: "Recently Viewed", value: "Continue shopping" },
+        ]}
+      />
+      <Section
+        title="Payments & Shipping"
+        expanded={sections.payments}
+        onToggle={() => toggleSection("payments")}
+        items={[
+          { label: "Payment Methods", value: "Visa **** 5432" },
+          { label: "Billing Address", value: "Same as delivery address" },
+          { label: "Shipping Info", value: "Fast delivery, 3-5 days" },
+        ]}
+      />
+      <Section
+        title="App Preferences"
+        expanded={sections.settings}
+        onToggle={() => toggleSection("settings")}
+        items={[
+          { label: "Notifications", type: "toggle", value: true },
+          { label: "Language", value: "English" },
+        ]}
+      />
+      <Section
+        title="Support & Settings"
+        expanded={sections.support}
+        onToggle={() => toggleSection("support")}
+        items={[
+          { label: "Help Center", value: "FAQs and Contact" },
+          { label: "Return Policy", value: "30-day return" },
+          { label: "Privacy Settings", value: "Manage your data" },
+          { label: "Log Out", value: "Log out from app" },
+        ]}
+      />
     </ScrollView>
+  );
+};
+
+// ========== SECTION COMPONENT ==========
+const Section = ({
+  title,
+  expanded,
+  onToggle,
+  items,
+}: {
+  title: string;
+  expanded: boolean;
+  onToggle: () => void;
+  items: {
+    label: string;
+    value?: string | boolean;
+    type?: "toggle";
+  }[];
+}) => {
+  return (
+    <View style={styles.sectionContainer}>
+      <TouchableOpacity
+        onPress={onToggle}
+        style={styles.sectionHeader}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={{ fontSize: 16 }}>{expanded ? "−" : "+"}</Text>
+      </TouchableOpacity>
+
+      {expanded &&
+        items.map((item, idx) => (
+          <View key={idx} style={styles.itemRow}>
+            <Text style={styles.itemLabel}>{item.label}</Text>
+            {item.type === "toggle" ? (
+              <Switch value={!!item.value} disabled />
+            ) : (
+              <Text style={styles.itemValue}>{item.value}</Text>
+            )}
+          </View>
+        ))}
+    </View>
   );
 };
 
 export default Profile;
 
+// ========== STYLES ==========
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",
   },
   coverContainer: {
-    height: 180,
+    height: 160,
     backgroundColor: "rgb(0,20,77)",
   },
   coverImage: {
@@ -101,49 +178,67 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     position: "absolute",
-    bottom: -50,
+    bottom: -40,
     left: "50%",
     transform: [{ translateX: -50 }],
-    borderWidth: 3,
-    borderColor: "white",
-    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: "#fff",
+    borderRadius: 50,
     overflow: "hidden",
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
-  infoContainer: {
+  nameContainer: {
     marginTop: 60,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  name: {
+    fontWeight: "700",
+    fontSize: 16,
+    color: "rgb(0,20,77)",
+  },
+  email: {
+    fontSize: 12,
+    color: "#666",
+  },
+  sectionContainer: {
     paddingHorizontal: 20,
-    gap: 10,
   },
-  label: {
-    fontSize: 13,
-    color: "#333",
-    fontWeight: "600",
-  },
-  input: {
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 10,
-    fontSize: 14,
-    color: "#000",
-  },
-  switchRow: {
+  sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginTop: 10,
   },
-  saveButton: {
-    backgroundColor: "rgb(116,98,255)",
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "rgb(0,20,77)",
+  },
+  itemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 12,
-    borderRadius: 20,
-    alignItems: "center",
+    borderBottomWidth: 0.5,
+    borderColor: "#ddd",
   },
-  saveButtonText: {
-    color: "white",
-    fontWeight: "bold",
+  itemLabel: {
+    fontSize: 12,
+    color: "#444",
+  },
+  itemValue: {
+    fontSize: 12,
+    color: "#000",
+    maxWidth: "60%",
+    textAlign: "right",
   },
 });
