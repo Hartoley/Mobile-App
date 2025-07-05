@@ -324,20 +324,21 @@ export default function AuthScreen() {
                 style={{
                   flexDirection: "row",
                   justifyContent: "center",
+                  alignItems: "center",
                   gap: 16,
                   marginVertical: 8,
                 }}
               >
-                <Image source={logo1} style={{ width: 30, height: 30 }} />
-                <Image source={logo3} style={{ width: 30, height: 30 }} />
+                <Image source={logo1} style={{ width: 20, height: 20 }} />
+                <Image source={logo3} style={{ width: 23, height: 23 }} />
 
-                <Image source={logo2} style={{ width: 30, height: 30 }} />
+                <Image source={logo2} style={{ width: 32, height: 32 }} />
               </View>
 
               <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
                 <Text
                   style={{
-                    fontSize: 12,
+                    fontSize: 14,
                     textAlign: "center",
                     color: "rgb(54,128,255)",
                     marginTop: 6,
