@@ -1,5 +1,6 @@
 import { useAuth } from "@/lib/autht-context";
 import { AntDesign } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -14,6 +15,8 @@ import YouTubeHeader from "../header";
 
 export default function Index() {
   const { signOut } = useAuth();
+  const router = useRouter();
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,7 +25,7 @@ export default function Index() {
     return fetch("https://dummyjson.com/products")
       .then((res) => res.json())
       .then((data) => {
-        const shuffled = [...data.products].sort(() => 0.5 - Math.random()); // shuffle to simulate change
+        const shuffled = [...data.products].sort(() => 0.5 - Math.random());
         setProducts(shuffled);
       })
       .catch((error) => console.error("Error fetching products:", error));
@@ -33,14 +36,16 @@ export default function Index() {
   }, []);
 
   const onRefresh = () => {
-    console.log("Refreshing products...");
     setRefreshing(true);
-    setProducts([]); // clear temporarily for visual feedback
+    setProducts([]);
     fetchProducts().finally(() => setRefreshing(false));
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => router.push(`/product/${item.id}`)}
+    >
       <Image source={{ uri: item.thumbnail }} style={styles.image} />
       <TouchableOpacity style={styles.heart}>
         <AntDesign name="hearto" size={16} color="#f55" />
@@ -58,8 +63,8 @@ export default function Index() {
           />
         ))}
       </View>
-      <Text style={styles.price}>₹ {item.price}</Text>
-    </View>
+      <Text style={styles.price}>₦ {item.price}</Text>
+    </TouchableOpacity>
   );
 
   const renderPlaceholder = (_, index) => (
@@ -154,6 +159,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
     marginTop: 8,
+    color: "rgb(0,20,77)",
+    fontFamily: "serif",
   },
   row: {
     flexDirection: "row",
