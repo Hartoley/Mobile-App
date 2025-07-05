@@ -121,20 +121,25 @@ const CartScreen = () => {
   const screenHeight = Dimensions.get("window").height;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5", paddingTop: 30 }}>
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
       <View
         style={{
-          backgroundColor: "white",
+          backgroundColor: "rgb(0,20,77)",
+
           paddingVertical: 16,
           alignItems: "center",
+          paddingTop: 40,
         }}
       >
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>Cart</Text>
+        <Text style={{ fontSize: 16, fontWeight: "bold", color: "white" }}>
+          Cart
+        </Text>
       </View>
 
+      {/* Cart items + summary */}
       <ScrollView
-        style={{ padding: 16, maxHeight: screenHeight * 0.89 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        style={{ padding: 16, maxHeight: screenHeight * 0.85 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
       >
         {cartItems.map((item) => (
           <View
@@ -197,6 +202,7 @@ const CartScreen = () => {
           </View>
         ))}
 
+        {/* Summary */}
         <View
           style={{
             backgroundColor: "white",
@@ -230,35 +236,38 @@ const CartScreen = () => {
             <Text style={{ fontWeight: "bold" }}>₦ {subTotal}</Text>
           </View>
         </View>
-
-        <TouchableOpacity
-          style={{
-            backgroundColor: "rgb(0,20,77)",
-            padding: 16,
-            borderRadius: 10,
-            alignItems: "center",
-            marginTop: 40,
-          }}
-        >
-          <Text style={{ color: "white", fontWeight: "bold" }}>
-            Continue (₦ {subTotal})
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
 
-      {/* Fixed Continue button */}
+      {/* Continue button moved up by ~15vh */}
       <View
         style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
           backgroundColor: "white",
           padding: 16,
           borderTopWidth: 1,
           borderTopColor: "#ddd",
+          marginBottom: screenHeight * 0.15, // pushes it up by ~15vh
         }}
-      ></View>
+      >
+        <TouchableOpacity
+          style={{
+            backgroundColor: "rgb(0,20,77)",
+            padding: 10,
+            borderRadius: 10,
+            alignItems: "center",
+            width: "60%",
+            alignSelf: "flex-end",
+          }}
+        >
+          <Text
+            style={{
+              color: "white",
+              fontWeight: "normal",
+            }}
+          >
+            Continue (₦ {subTotal})
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
