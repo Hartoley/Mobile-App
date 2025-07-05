@@ -1,5 +1,7 @@
+import { useAuth } from "@/lib/autht-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
+
 import {
   StyleSheet,
   Text,
@@ -9,6 +11,8 @@ import {
 } from "react-native";
 
 export default function YouTubeHeader() {
+  const { signOut } = useAuth();
+
   return (
     <View style={styles.container}>
       {/* Top: Location and Bell */}
@@ -19,9 +23,15 @@ export default function YouTubeHeader() {
           <Ionicons name="chevron-down" size={12} color="#fff" />
         </View>
 
-        <TouchableOpacity style={styles.bellWrapper}>
-          <Ionicons name="notifications-outline" size={16} color="white" />
-        </TouchableOpacity>
+        <View className="flex-row gap-2">
+          <TouchableOpacity onPress={signOut} style={styles.bellWrapper}>
+            <Ionicons name="log-out" size={16} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.bellWrapper}>
+            <Ionicons name="notifications-outline" size={16} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search bar + Filter */}

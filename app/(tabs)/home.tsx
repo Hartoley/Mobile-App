@@ -1,5 +1,5 @@
 import { useAuth } from "@/lib/autht-context";
-import { AntDesign } from "@expo/vector-icons"; // for heart and stars
+import { AntDesign } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -9,18 +9,35 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import YouTubeHeader from "../header"; // your header component
+import Category from "../category";
+import YouTubeHeader from "../header";
 
 export default function Index() {
   const { signOut } = useAuth();
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchProducts = () => {
+    return fetch("https://dummyjson.com/products")
+      .then((res) => res.json())
+      .then((data) => {
+        const shuffled = [...data.products].sort(() => 0.5 - Math.random()); // shuffle to simulate change
+        setProducts(shuffled);
+      })
+      .catch((error) => console.error("Error fetching products:", error));
+  };
 
   useEffect(() => {
-    fetch("https://dummyjson.com/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data.products))
-      .catch((error) => console.error("Error fetching products:", error));
+    fetchProducts().finally(() => setLoading(false));
   }, []);
+
+  const onRefresh = () => {
+    console.log("Refreshing products...");
+    setRefreshing(true);
+    setProducts([]); // clear temporarily for visual feedback
+    fetchProducts().finally(() => setRefreshing(false));
+  };
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
@@ -45,17 +62,54 @@ export default function Index() {
     </View>
   );
 
+  const renderPlaceholder = (_, index) => (
+    <View key={index} style={styles.card}>
+      <View style={[styles.image, { backgroundColor: "#e5e7eb" }]} />
+      <View style={styles.heart}>
+        <AntDesign name="hearto" size={16} color="#ccc" />
+      </View>
+      <View
+        style={{
+          height: 12,
+          backgroundColor: "#e5e7eb",
+          borderRadius: 4,
+          marginTop: 8,
+          width: "70%",
+        }}
+      />
+      <View style={[styles.row, { marginTop: 6 }]}>
+        {[...Array(5)].map((_, i) => (
+          <AntDesign key={i} name="star" size={12} color="#d1d5db" />
+        ))}
+      </View>
+      <View
+        style={{
+          height: 14,
+          backgroundColor: "#e5e7eb",
+          borderRadius: 4,
+          width: "40%",
+          marginTop: 6,
+        }}
+      />
+    </View>
+  );
+
   return (
     <>
       <YouTubeHeader />
+      <Category />
       <View style={styles.container}>
         <FlatList
-          data={products}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
+          data={loading || refreshing ? Array.from({ length: 6 }) : products}
+          renderItem={loading || refreshing ? renderPlaceholder : renderItem}
+          keyExtractor={(item, index) =>
+            loading || refreshing ? index.toString() : item.id.toString()
+          }
           numColumns={2}
           contentContainerStyle={styles.list}
           columnWrapperStyle={{ justifyContent: "space-between" }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
         />
       </View>
     </>
@@ -107,7 +161,7 @@ const styles = StyleSheet.create({
   },
   price: {
     fontWeight: "700",
-    color: "#16a34a",
+    color: "rgb(0,20,77)",
     fontSize: 14,
   },
 });
