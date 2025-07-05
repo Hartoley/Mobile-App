@@ -18,7 +18,7 @@ export default function TabsLayout() {
 
               break;
             case "cart":
-              iconName = "bag-outline";
+              iconName = "cart-outline";
               break;
             case "wishlist":
               iconName = "heart-outline";

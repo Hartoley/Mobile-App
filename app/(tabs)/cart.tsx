@@ -1,5 +1,6 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
+
 import {
   Dimensions,
   Image,
@@ -121,16 +122,25 @@ const CartScreen = () => {
   const screenHeight = Dimensions.get("window").height;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
+    <View style={{ flex: 1, backgroundColor: "rgb(215,223,243)" }}>
       <View
         style={{
           backgroundColor: "rgb(0,20,77)",
-
-          paddingVertical: 16,
+          height: "15%",
+          alignContent: "center",
+          justifyContent: "center",
+          paddingVertical: 10,
           alignItems: "center",
           paddingTop: 40,
+          borderBottomLeftRadius: 20,
+          borderBottomRightRadius: 20,
+          overflow: "hidden",
+          flexDirection: "row",
+          gap: 10,
         }}
       >
+        <Ionicons name="cart-sharp" size={20} color="white" />
+
         <Text style={{ fontSize: 16, fontWeight: "bold", color: "white" }}>
           Cart
         </Text>
@@ -164,8 +174,16 @@ const CartScreen = () => {
             />
 
             <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: "bold" }}>{item.name}</Text>
-              <Text style={{ color: "rgb(116,98,255)", fontWeight: "bold" }}>
+              <Text style={{ fontWeight: "bold", fontSize: 12 }}>
+                {item.name}
+              </Text>
+              <Text
+                style={{
+                  color: "rgb(116,98,255)",
+                  fontWeight: "bold",
+                  fontSize: 12,
+                }}
+              >
                 ₦ {item.price}
               </Text>
               <Text style={{ fontSize: 12 }}>Size: {item.size}</Text>
@@ -201,60 +219,101 @@ const CartScreen = () => {
             </View>
           </View>
         ))}
-
-        {/* Summary */}
-        <View
-          style={{
-            backgroundColor: "white",
-            borderRadius: 10,
-            padding: 16,
-            marginTop: 20,
-          }}
-        >
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <Text>Total</Text>
-            <Text>₦ {total}</Text>
-          </View>
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <Text>Discount</Text>
-            <Text>₦ {discount}</Text>
-          </View>
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <Text>Delivery fee</Text>
-            <Text>₦ {delivery}</Text>
-          </View>
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <Text style={{ fontWeight: "bold" }}>Sub Total</Text>
-            <Text style={{ fontWeight: "bold" }}>₦ {subTotal}</Text>
-          </View>
-        </View>
       </ScrollView>
 
       {/* Continue button moved up by ~15vh */}
       <View
         style={{
+          alignSelf: "center",
+          width: "90%",
           backgroundColor: "white",
+          marginTop: 10,
           padding: 16,
           borderTopWidth: 1,
           borderTopColor: "#ddd",
           marginBottom: screenHeight * 0.15, // pushes it up by ~15vh
+          borderBottomLeftRadius: 20,
+          borderBottomRightRadius: 20,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
         }}
       >
+        {/* Summary */}
+
+        <View
+          style={{
+            backgroundColor: "white",
+            borderRadius: 10,
+            paddingBlockStart: 10,
+            paddingBlockEnd: 10,
+            gap: 3,
+          }}
+        >
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+              }}
+            >
+              Total
+            </Text>
+            <Text
+              style={{
+                fontSize: 13,
+              }}
+            >
+              ₦ {total}
+            </Text>
+          </View>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+              }}
+            >
+              Discount
+            </Text>
+            <Text>₦ {discount}</Text>
+          </View>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+              }}
+            >
+              Delivery fee
+            </Text>
+            <Text
+              style={{
+                fontSize: 13,
+              }}
+            >
+              ₦ {delivery}
+            </Text>
+          </View>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text style={{ fontWeight: "bold", fontSize: 13 }}>Sub Total</Text>
+            <Text style={{ fontWeight: "bold", fontSize: 13 }}>
+              ₦ {subTotal}
+            </Text>
+          </View>
+        </View>
         <TouchableOpacity
           style={{
             backgroundColor: "rgb(0,20,77)",
-            padding: 10,
             borderRadius: 10,
             alignItems: "center",
             width: "60%",
+            height: 50,
+            justifyContent: "center",
             alignSelf: "flex-end",
           }}
         >

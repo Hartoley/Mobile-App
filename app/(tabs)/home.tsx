@@ -100,7 +100,7 @@ export default function Index() {
   );
 
   return (
-    <>
+    <View className=" h-full w-full bg-[rgb(215,223,243)] ">
       <YouTubeHeader />
       <Category />
       <View style={styles.container}>
@@ -117,15 +117,15 @@ export default function Index() {
           onRefresh={onRefresh}
         />
       </View>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
-    paddingTop: 10,
+    backgroundColor: "rgb(215,223,243)",
+    paddingVertical: 15,
   },
   list: {
     paddingHorizontal: 10,

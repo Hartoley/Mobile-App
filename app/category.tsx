@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     width: "95%",
     height: 40,
+    backgroundColor: "rgb(215,223,243)",
   },
   scroll: {
     alignItems: "center",
