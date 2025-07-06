@@ -1,11 +1,21 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { ID, Models } from "react-native-appwrite";
-import { account } from "./appwrite";
+
+type UserType = {
+  id: string;
+  email: string;
+  userName: string;
+};
 
 type AuthContextType = {
-  user: Models.User<Models.Preferences> | null;
+  user: UserType | null;
   isloadingUser: boolean;
-  signUp: (email: string, password: string) => Promise<string | null>;
+  signUp: (
+    userName: string,
+    email: string,
+    password: string
+  ) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
 };
@@ -13,60 +23,98 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(
-    null
-  );
-
+  const [user, setUser] = useState<UserType | null>(null);
   const [isloadingUser, setIsloadingUser] = useState<boolean>(true);
 
   useEffect(() => {
-    getUser();
+    const loadUser = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem("QurioUser");
+        const storedUserEmail = await AsyncStorage.getItem("QurioUserEmail");
+        const storedUserName = await AsyncStorage.getItem("QurioUserName");
+
+        if (storedUserId && storedUserEmail && storedUserName) {
+          setUser({
+            id: storedUserId,
+            email: storedUserEmail,
+            userName: storedUserName,
+          });
+        }
+      } catch (error) {
+        console.log("Error loading user from AsyncStorage:", error);
+      } finally {
+        setIsloadingUser(false);
+      }
+    };
+
+    loadUser();
   }, []);
 
-  const getUser = async () => {
+  const signUp = async (userName: string, email: string, password: string) => {
     try {
-      const session = await account.get();
-      setUser(session);
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setIsloadingUser(false);
-    }
-  };
+      const res = await axios.post(
+        "https://qurioans.onrender.com/qurioans/signup",
+        { userName, email, password }
+      );
+      alert(res.data.message);
 
-  const signUp = async (email: string, password: string) => {
-    try {
-      await account.create(ID.unique(), email, password);
-      await signIn(email, password);
+      const userId = res.data.userId;
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem("QurioUser", userId);
+      await AsyncStorage.setItem("QurioUserEmail", email);
+      await AsyncStorage.setItem("QurioUserName", userName);
+
+      // Update state
+      setUser({ id: userId, email, userName });
+
       return null;
     } catch (error) {
-      if (error instanceof Error) {
-        return error.message;
+      if (axios.isAxiosError(error)) {
+        return error.response?.data?.message || "Signup failed";
       }
-      return "An error occurred during sign up";
+      return "An error occurred during signup";
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      await account.createEmailPasswordSession(email, password); // ✅ Fixed: use correct method
-      const session = await account.get();
-      setUser(session);
+      const res = await axios.post(
+        "https://qurioans.onrender.com/qurioans/signin",
+        { email, password }
+      );
+      alert(res.data.message);
+
+      const userId = res.data.id;
+      const userName = res.data.userName; // Assuming your API returns userName on login
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem("QurioUser", userId);
+      await AsyncStorage.setItem("QurioUserEmail", email);
+      if (userName) {
+        await AsyncStorage.setItem("QurioUserName", userName);
+      }
+
+      // Update state
+      setUser({ id: userId, email, userName: userName || "" });
+
       return null;
     } catch (error) {
-      if (error instanceof Error) {
-        return error.message;
+      if (axios.isAxiosError(error)) {
+        return error.response?.data?.message || "Login failed";
       }
-      return "An error occurred during sign in";
+      return "An error occurred during login";
     }
   };
 
   const signOut = async () => {
     try {
-      await account.deleteSession("current");
+      await AsyncStorage.removeItem("QurioUser");
+      await AsyncStorage.removeItem("QurioUserEmail");
+      await AsyncStorage.removeItem("QurioUserName");
       setUser(null);
     } catch (error) {
-      console.log(error);
+      console.log("Error signing out:", error);
     }
   };
 

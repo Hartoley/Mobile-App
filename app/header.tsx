@@ -35,6 +35,10 @@ export default function YouTubeHeader() {
     router.push("/editProfile");
   };
 
+  const sell = () => {
+    router.push("/product/uploadproduct");
+  };
+
   return (
     <View style={styles.container}>
       {/* Top: Location and Bell */}
@@ -46,16 +50,16 @@ export default function YouTubeHeader() {
         </View>
 
         <View className="flex-row gap-2">
-          {/* <TouchableOpacity onPress={signOut} style={styles.bellWrapper}>
-            <Ionicons name="log-out" size={16} color="white" />
-          </TouchableOpacity> */}
-
           <TouchableOpacity
             style={styles.bellWrapper}
             onPress={handleNotificationPress}
             disabled={isNavigating}
           >
             <Ionicons name="notifications-outline" size={16} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={sell} style={styles.bellWrapper}>
+            <Text className="text-white">Sell</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -21,6 +21,17 @@ const categories = [
   "Shoes",
   "Watch",
   "New",
+  "Men",
+  "Women",
+  "Beauty",
+  "Fashion",
+  "Health",
+  "Home",
+  "Lifestyle",
+  "Sports",
+  "Kids",
+  "Pets",
+  "Others",
 ];
 
 const Category = () => {
