@@ -1,5 +1,6 @@
 import { useAuth } from "@/lib/autht-context";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 
@@ -15,6 +16,7 @@ import {
 const streaks = () => {
   const { signOut } = useAuth();
   const router = useRouter();
+  const navigation = useNavigation();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -116,11 +118,19 @@ const streaks = () => {
           gap: 5,
         }}
       >
-        <Ionicons name="heart" size={18} color="red" />
+        <TouchableOpacity
+          className=" w-[30%]"
+          onPress={() => navigation.goBack()}
+        >
+          <AntDesign name="arrowleft" size={24} color="white" />
+        </TouchableOpacity>
+        <View className="items-center gap-3 w-[50%] flex-row h-full">
+          <Ionicons name="heart" size={18} color="red" />
 
-        <Text style={{ fontSize: 16, fontWeight: "bold", color: "white" }}>
-          My Wishlist
-        </Text>
+          <Text style={{ fontSize: 16, fontWeight: "bold", color: "white" }}>
+            My Wishlist
+          </Text>
+        </View>
       </View>
       <View style={styles.container}>
         <FlatList

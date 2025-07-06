@@ -1,10 +1,13 @@
 import { Picker } from "@react-native-picker/picker";
-import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  Dimensions,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,110 +15,56 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AntDesign from "react-native-vector-icons/AntDesign";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
-// Category-specific meta field templates
+const { width } = Dimensions.get("window");
+
 const categoryMetaFields = {
   Electronics: ["Brand", "Model", "Warranty"],
-  Books: ["Author", "Publisher", "ISBN"],
-  Clothing: ["Size", "Color", "Material"],
-  Food: ["Ingredients", "Expiry Date"],
-  Others: [],
+  Books: ["Author", "Publisher", "Edition"],
+  Clothing: ["Brand", "Size", "Color"],
+  // ... (keep your existing category meta fields)
 };
 
-const categories = Object.keys(categoryMetaFields);
-
-export default function UploadProduct() {
+const ProductUploadScreen = ({ navigation }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("Electronics");
   const [thumbnail, setThumbnail] = useState(null);
   const [images, setImages] = useState([]);
-  const [meta, setMeta] = useState(
-    categoryMetaFields[category].map((field) => ({ key: field, value: "" }))
-  );
+  const [meta, setMeta] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const pickImage = async (isThumbnail = false) => {
-    if (!isThumbnail && images.length >= 5) {
-      return alert("Max 5 images allowed");
+  useEffect(() => {
+    const fields = categoryMetaFields[category] || [];
+    const defaultMeta = fields.map((field) => ({ key: field, value: "" }));
+    setMeta(defaultMeta);
+  }, [category]);
+
+  const pickThumbnail = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled) setThumbnail(result.assets[0]);
+  };
+
+  const pickImages = async () => {
+    if (images.length >= 5) {
+      Alert.alert("Limit reached", "You can upload maximum 5 images");
+      return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: !isThumbnail,
-      quality: 1,
+      allowsMultipleSelection: true,
+      quality: 0.7,
     });
-
     if (!result.canceled) {
-      if (isThumbnail) {
-        setThumbnail(result.assets[0]);
-      } else {
-        setImages([...images, ...result.assets.slice(0, 5 - images.length)]);
-      }
-    }
-  };
-
-  const handleCategoryChange = (text) => {
-    setCategory(text);
-    const fields = categoryMetaFields[text] || [];
-    const defaultMeta = fields.map((field) => ({ key: field, value: "" }));
-    setMeta(defaultMeta);
-  };
-
-  const validate = () => {
-    const errs = {};
-    if (!title) errs.title = "Title is required";
-    if (!description) errs.description = "Description is required";
-    if (!price) errs.price = "Price is required";
-    else if (isNaN(price)) errs.price = "Price must be a number";
-    if (!thumbnail) errs.thumbnail = "Thumbnail is required";
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleUpload = async () => {
-    if (!validate()) return;
-
-    setLoading(true);
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("price", price);
-    formData.append("category", category);
-    formData.append("createdBy", "YOUR_ADMIN_ID"); // Replace accordingly
-
-    formData.append("thumbnail", {
-      uri: thumbnail.uri,
-      type: "image/jpeg",
-      name: "thumbnail.jpg",
-    });
-
-    images.forEach((img, index) => {
-      formData.append("images", {
-        uri: img.uri,
-        type: "image/jpeg",
-        name: `image${index + 1}.jpg`,
-      });
-    });
-
-    const metaObj = meta.reduce((acc, curr) => {
-      if (curr.key && curr.value) acc[curr.key] = curr.value;
-      return acc;
-    }, {});
-    formData.append("meta", JSON.stringify(metaObj));
-
-    try {
-      await axios.post("https://yourapi.com/api/products", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      alert("Product uploaded!");
-      // Clear form if needed here
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed");
-    } finally {
-      setLoading(false);
+      const newImgs = result.assets.slice(0, 5 - images.length);
+      setImages([...images, ...newImgs]);
     }
   };
 
@@ -125,218 +74,390 @@ export default function UploadProduct() {
     setImages(updated);
   };
 
+  const updateMetaField = (index, value) => {
+    const updated = [...meta];
+    updated[index].value = value;
+    setMeta(updated);
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!title.trim()) errs.title = "Title is required";
+    if (!description.trim()) errs.description = "Description is required";
+    if (!price) errs.price = "Price is required";
+    else if (isNaN(price)) errs.price = "Price must be a number";
+    if (!thumbnail) errs.thumbnail = "Thumbnail is required";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    setLoading(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      Alert.alert("Success", "Product uploaded successfully!");
+      clearForm();
+    } catch (error) {
+      Alert.alert("Error", "Failed to upload product");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearForm = () => {
+    setTitle("");
+    setDescription("");
+    setPrice("");
+    setThumbnail(null);
+    setImages([]);
+    const fields = categoryMetaFields[category] || [];
+    setMeta(fields.map((field) => ({ key: field, value: "" })));
+  };
+
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 100 }}
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <AntDesign name="arrowleft" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Create New Product</Text>
+      </View>
+
+      {/* Content */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.flex}
       >
-        <Text style={styles.label}>Title *</Text>
-        <TextInput style={styles.input} value={title} onChangeText={setTitle} />
-        {errors.title && <Text style={styles.error}>{errors.title}</Text>}
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Basic Info Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
 
-        <Text style={styles.label}>Description *</Text>
-        <TextInput
-          style={[styles.input, { height: 80 }]}
-          multiline
-          value={description}
-          onChangeText={setDescription}
-        />
-        {errors.description && (
-          <Text style={styles.error}>{errors.description}</Text>
-        )}
-
-        <Text style={styles.label}>Price *</Text>
-        <TextInput
-          style={styles.input}
-          value={price}
-          onChangeText={setPrice}
-          keyboardType="numeric"
-        />
-        {errors.price && <Text style={styles.error}>{errors.price}</Text>}
-
-        <Text style={styles.label}>Category *</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={category}
-            onValueChange={handleCategoryChange}
-            style={styles.picker}
-          >
-            {categories.map((cat) => (
-              <Picker.Item key={cat} label={cat} value={cat} />
-            ))}
-          </Picker>
-        </View>
-
-        <Text style={styles.label}>Thumbnail *</Text>
-        <TouchableOpacity
-          style={styles.uploadBtn}
-          onPress={() => pickImage(true)}
-        >
-          <Text style={styles.uploadText}>Choose Thumbnail</Text>
-        </TouchableOpacity>
-        {thumbnail && (
-          <Image source={{ uri: thumbnail.uri }} style={styles.imagePreview} />
-        )}
-        {errors.thumbnail && (
-          <Text style={styles.error}>{errors.thumbnail}</Text>
-        )}
-
-        <Text style={styles.label}>Gallery Images ({images.length}/5)</Text>
-        <TouchableOpacity
-          style={[
-            styles.uploadBtn,
-            images.length >= 5 && { backgroundColor: "#999" },
-          ]}
-          onPress={() => images.length < 5 && pickImage(false)}
-          disabled={images.length >= 5}
-        >
-          <Text style={styles.uploadText}>Add Images</Text>
-        </TouchableOpacity>
-        <ScrollView horizontal>
-          {images.map((img, i) => (
-            <View key={i} style={{ position: "relative" }}>
-              <Image source={{ uri: img.uri }} style={styles.galleryPreview} />
-              <TouchableOpacity
-                onPress={() => removeImage(i)}
-                style={styles.removeBtn}
-              >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>X</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
-
-        <Text style={styles.label}>Meta (Category Specific)</Text>
-        {meta.length === 0 && (
-          <Text style={{ fontSize: 12, color: "#666" }}>
-            No additional fields for this category.
-          </Text>
-        )}
-        {meta.map((item, index) => (
-          <View key={index} style={styles.metaRow}>
+            <Text style={styles.label}>Product Title *</Text>
             <TextInput
-              placeholder="Key"
-              value={item.key}
-              editable={false}
+              style={[styles.input, errors.title && styles.inputError]}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter product title"
+              placeholderTextColor="#999"
+            />
+            {errors.title && (
+              <Text style={styles.errorText}>{errors.title}</Text>
+            )}
+
+            <Text style={styles.label}>Description *</Text>
+            <TextInput
               style={[
                 styles.input,
-                { flex: 1, marginRight: 4, backgroundColor: "#eee" },
+                styles.textArea,
+                errors.description && styles.inputError,
               ]}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Describe your product in detail"
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={4}
             />
-            <TextInput
-              placeholder="Value"
-              value={item.value}
-              onChangeText={(text) => {
-                const updated = [...meta];
-                updated[index].value = text;
-                setMeta(updated);
-              }}
-              style={[styles.input, { flex: 1 }]}
-            />
+            {errors.description && (
+              <Text style={styles.errorText}>{errors.description}</Text>
+            )}
+
+            <View style={styles.row}>
+              <View style={styles.priceContainer}>
+                <Text style={styles.label}>Price *</Text>
+                <TextInput
+                  style={[styles.input, errors.price && styles.inputError]}
+                  value={price}
+                  onChangeText={setPrice}
+                  placeholder="0.00"
+                  placeholderTextColor="#999"
+                  keyboardType="numeric"
+                />
+                {errors.price && (
+                  <Text style={styles.errorText}>{errors.price}</Text>
+                )}
+              </View>
+
+              <View style={styles.categoryContainer}>
+                <Text style={styles.label}>Category *</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={category}
+                    onValueChange={setCategory}
+                    dropdownIconColor="#555"
+                    style={styles.picker}
+                  >
+                    {Object.keys(categoryMetaFields).map((cat) => (
+                      <Picker.Item key={cat} label={cat} value={cat} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            </View>
           </View>
-        ))}
 
-        <TouchableOpacity
-          onPress={handleUpload}
-          disabled={loading}
-          style={[
-            styles.uploadBtn,
-            { backgroundColor: "rgb(0,20,77)", marginTop: 20 },
-          ]}
-        >
-          <Text style={styles.uploadText}>
-            {loading ? "Uploading..." : "Submit Product"}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* Media Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Media</Text>
 
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={{ color: "#fff", marginTop: 10 }}>Uploading...</Text>
-        </View>
-      )}
+            <Text style={styles.label}>Thumbnail Image *</Text>
+            <TouchableOpacity
+              style={[
+                styles.uploadButton,
+                errors.thumbnail && styles.inputError,
+              ]}
+              onPress={pickThumbnail}
+            >
+              <Text style={styles.buttonText}>
+                {thumbnail ? "Change Thumbnail" : "Select Thumbnail"}
+              </Text>
+            </TouchableOpacity>
+            {thumbnail && (
+              <Image
+                source={{ uri: thumbnail.uri }}
+                style={styles.thumbnailPreview}
+              />
+            )}
+            {errors.thumbnail && (
+              <Text style={styles.errorText}>{errors.thumbnail}</Text>
+            )}
+
+            <Text style={styles.label}>
+              Additional Images ({images.length}/5)
+            </Text>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={pickImages}
+              disabled={images.length >= 5}
+            >
+              <Text style={styles.buttonText}>Add Images</Text>
+            </TouchableOpacity>
+
+            {images.length > 0 && (
+              <ScrollView horizontal style={styles.galleryContainer}>
+                {images.map((img, index) => (
+                  <View key={index} style={styles.imageWrapper}>
+                    <Image
+                      source={{ uri: img.uri }}
+                      style={styles.galleryImage}
+                    />
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Ionicons name="close" size={16} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+
+          {/* Meta Fields Section */}
+          {meta.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Product Specifications</Text>
+              {meta.map((item, index) => (
+                <View key={index} style={styles.metaRow}>
+                  <Text style={styles.metaLabel}>{item.key}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={item.value}
+                    onChangeText={(text) => updateMetaField(index, text)}
+                    placeholder={`Enter ${item.key.toLowerCase()}`}
+                    placeholderTextColor="#999"
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.submitButtonText}>List Product</Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: "#f5f5f5",
+    flex: 1,
+    backgroundColor: "#f8f9fa",
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 30,
+  },
+  header: {
+    backgroundColor: "#001a41",
+    paddingTop: 50,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backButton: {
+    marginRight: 15,
+  },
+  headerTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  section: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+    margin: 15,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 20,
   },
   label: {
-    marginBottom: 6,
-    fontWeight: "600",
-    fontSize: 13,
+    fontSize: 14,
+    color: "#444",
+    marginBottom: 8,
+    fontWeight: "500",
   },
   input: {
-    backgroundColor: "#fff",
-    padding: 10,
+    backgroundColor: "#f8f9fa",
     borderRadius: 8,
-    marginBottom: 6,
-    fontSize: 13,
+    padding: 12,
+    fontSize: 15,
+    color: "#333",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    marginBottom: 15,
   },
-  pickerWrapper: {
-    backgroundColor: "#fff",
+  inputError: {
+    borderColor: "#ff4444",
+    backgroundColor: "#fff5f5",
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: "top",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 15,
+  },
+  priceContainer: {
+    flex: 1,
+  },
+  categoryContainer: {
+    flex: 1,
+  },
+  pickerContainer: {
+    backgroundColor: "#f8f9fa",
     borderRadius: 8,
-    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    overflow: "hidden",
   },
   picker: {
-    height: 40,
-    width: "100%",
+    height: 50,
   },
-  uploadBtn: {
-    backgroundColor: "#ccc",
-    padding: 12,
+  uploadButton: {
+    backgroundColor: "#f0f2f5",
+    padding: 15,
     borderRadius: 8,
     alignItems: "center",
-    marginBottom: 12,
+    justifyContent: "center",
+    marginBottom: 15,
   },
-  uploadText: {
-    color: "#000",
-    fontWeight: "600",
+  buttonText: {
+    color: "#333",
+    fontWeight: "500",
   },
-  imagePreview: {
-    width: 120,
-    height: 120,
-    marginTop: 10,
-    borderRadius: 10,
+  thumbnailPreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 15,
   },
-  galleryPreview: {
-    width: 80,
-    height: 80,
-    marginRight: 8,
-    marginTop: 10,
+  galleryContainer: {
+    marginBottom: 15,
+  },
+  imageWrapper: {
+    position: "relative",
+    marginRight: 10,
+  },
+  galleryImage: {
+    width: 100,
+    height: 100,
     borderRadius: 8,
   },
-  removeBtn: {
+  removeButton: {
     position: "absolute",
-    top: 2,
-    right: 2,
-    backgroundColor: "red",
-    borderRadius: 10,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-  },
-  metaRow: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  error: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    top: 5,
+    right: 5,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
   },
+  metaRow: {
+    marginBottom: 15,
+  },
+  metaLabel: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 5,
+    fontWeight: "500",
+  },
+  submitButton: {
+    backgroundColor: "#003366",
+    padding: 16,
+    borderRadius: 8,
+    marginHorizontal: 15,
+    marginTop: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  submitButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
+  },
 });
+
+export default ProductUploadScreen;

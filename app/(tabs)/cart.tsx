@@ -1,4 +1,5 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useState } from "react";
 
 import {
@@ -11,6 +12,8 @@ import {
 } from "react-native";
 
 const CartScreen = () => {
+  const route = useRoute();
+  const navigation = useNavigation();
   const [cartItems, setCartItems] = useState([
     {
       id: 1,
@@ -139,11 +142,18 @@ const CartScreen = () => {
           gap: 10,
         }}
       >
-        <Ionicons name="cart-sharp" size={20} color="white" />
-
-        <Text style={{ fontSize: 16, fontWeight: "bold", color: "white" }}>
-          Cart
-        </Text>
+        <TouchableOpacity
+          className=" w-[30%]"
+          onPress={() => navigation.goBack()}
+        >
+          <AntDesign name="arrowleft" size={24} color="white" />
+        </TouchableOpacity>
+        <View className="items-center gap-3 w-[50%] flex-row h-full">
+          <Ionicons name="cart-sharp" size={20} color="white" />
+          <Text style={{ fontSize: 16, fontWeight: "bold", color: "white" }}>
+            Cart
+          </Text>
+        </View>
       </View>
 
       {/* Cart items + summary */}
@@ -321,6 +331,7 @@ const CartScreen = () => {
             style={{
               color: "white",
               fontWeight: "normal",
+              fontSize: 13,
             }}
           >
             Continue (₦ {subTotal})

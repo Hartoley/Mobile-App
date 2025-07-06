@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",
-    paddingVertical: 15,
+    paddingVertical: 0,
   },
   list: {
     paddingHorizontal: 10,

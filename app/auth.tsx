@@ -8,7 +8,6 @@ import {
   Image,
   ImageBackground,
   KeyboardAvoidingView,
-  Platform,
   Text,
   TouchableOpacity,
   View,
@@ -84,10 +83,7 @@ export default function AuthScreen() {
 
   return (
     <ImageBackground source={bgImage} style={{ flex: 1 }} resizeMode="cover">
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
+      <KeyboardAvoidingView style={{ flex: 1, height: "100%" }}>
         <View className="w-full h-full flex-col items-center justify-end">
           <View
             style={{
