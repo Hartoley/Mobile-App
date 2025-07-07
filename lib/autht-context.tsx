@@ -27,6 +27,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isloadingUser, setIsloadingUser] = useState<boolean>(true);
 
   useEffect(() => {
+    console.log("I'm working");
+
     const loadUser = async () => {
       try {
         const storedUserId = await AsyncStorage.getItem("QurioUser");
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: storedUserEmail,
             userName: storedUserName,
           });
+          alert(`Welcome back, ${storedUserName}!`);
         }
       } catch (error) {
         console.log("Error loading user from AsyncStorage:", error);
@@ -83,20 +86,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "https://qurioans.onrender.com/qurioans/signin",
         { email, password }
       );
+
+      console.log("Signin response data:", res.data);
       alert(res.data.message);
 
       const userId = res.data.id;
-      const userName = res.data.userName; // Assuming your API returns userName on login
+      const userName = res.data.userName || "Anonymous";
 
-      // Save to AsyncStorage
-      await AsyncStorage.setItem("QurioUser", userId);
-      await AsyncStorage.setItem("QurioUserEmail", email);
-      if (userName) {
+      try {
+        await AsyncStorage.setItem("QurioUser", userId);
+        await AsyncStorage.setItem("QurioUserEmail", email);
         await AsyncStorage.setItem("QurioUserName", userName);
+
+        console.log("✅ Saved user to AsyncStorage", {
+          userId,
+          email,
+          userName,
+        });
+
+        const testId = await AsyncStorage.getItem("QurioUser");
+        const testEmail = await AsyncStorage.getItem("QurioUserEmail");
+        const testUserName = await AsyncStorage.getItem("QurioUserName");
+      } catch (storageError) {
+        console.log("❌ Error saving user data to AsyncStorage:", storageError);
       }
 
       // Update state
-      setUser({ id: userId, email, userName: userName || "" });
+      setUser({ id: userId, email, userName });
 
       return null;
     } catch (error) {

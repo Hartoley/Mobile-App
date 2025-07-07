@@ -1,6 +1,9 @@
 import { Picker } from "@react-native-picker/picker";
+import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -117,7 +120,7 @@ const categoryMetaFields = {
   ],
 };
 
-const ProductUploadScreen = ({ navigation }) => {
+const ProductUploadScreen = ({}) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -127,6 +130,7 @@ const ProductUploadScreen = ({ navigation }) => {
   const [meta, setMeta] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fields = categoryMetaFields[category] || [];
@@ -185,13 +189,63 @@ const ProductUploadScreen = ({ navigation }) => {
     if (!validate()) return;
 
     setLoading(true);
+
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      Alert.alert("Success", "Product uploaded successfully!");
+      const formData = new FormData();
+      // Basic fields
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("price", price);
+      formData.append("category", category);
+      formData.append("createdBy", "current_user_id"); // Replace with actual user ID
+
+      // Thumbnail image
+      if (thumbnail) {
+        formData.append("thumbnail", {
+          uri: thumbnail.uri,
+          name: "thumbnail.jpg",
+          type: "image/jpeg",
+        });
+      }
+
+      // Gallery images
+      images.forEach((image, index) => {
+        formData.append("images", {
+          uri: image.uri,
+          name: `image_${index}.jpg`,
+          type: "image/jpeg",
+        });
+      });
+
+      // Meta fields
+      const metaData = {};
+      meta.forEach((field) => {
+        if (field.value) metaData[field.key] = field.value;
+      });
+      formData.append("meta", JSON.stringify(metaData));
+
+      const response = await axios.post(
+        "http://localhost:5003/mobile/products",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      Alert.alert(
+        "Success",
+        response.data.message || "Product uploaded successfully!"
+      );
       clearForm();
     } catch (error) {
-      Alert.alert("Error", "Failed to upload product");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to upload product";
+      Alert.alert("Error", errorMessage);
+      console.error("Upload error:", error);
     } finally {
       setLoading(false);
     }

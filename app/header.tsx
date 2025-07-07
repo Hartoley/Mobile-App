@@ -1,8 +1,9 @@
 import { useAuth } from "@/lib/autht-context";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   StyleSheet,
@@ -18,6 +19,19 @@ export default function YouTubeHeader() {
   const [isNavigating, setIsNavigating] = useState(false);
 
   const isNavigatingRef = useRef(false);
+
+  const [storedUserName, setStoredUserName] = useState("");
+
+  useEffect(() => {
+    const fetchStoredUserName = async () => {
+      const name = await AsyncStorage.getItem("QurioUserName");
+      if (name) {
+        setStoredUserName(name);
+      }
+    };
+
+    fetchStoredUserName();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -44,13 +58,13 @@ export default function YouTubeHeader() {
       {/* Top: Location and Bell */}
       <View style={styles.topRow}>
         <View style={styles.locationContainer}>
-          <Ionicons name="location-sharp" size={14} color="#ffbe55" />
-          <Text style={styles.locationText}>New York, USA</Text>
-          <Ionicons name="chevron-down" size={12} color="#fff" />
+          <Ionicons name="person" size={14} color="#ffbe55" />
+          <Text className="text-white">{storedUserName}</Text>
         </View>
 
         <View className="flex-row gap-2">
           <TouchableOpacity
+            className="items-center"
             style={styles.bellWrapper}
             onPress={handleNotificationPress}
             disabled={isNavigating}
@@ -59,7 +73,9 @@ export default function YouTubeHeader() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={sell} style={styles.bellWrapper}>
-            <Text className="text-white">Sell</Text>
+            <Ionicons name="storefront" size={16} color="white" />
+
+            {/* <Text className="text-white">Sell</Text> */}
           </TouchableOpacity>
         </View>
       </View>
@@ -106,7 +122,7 @@ const styles = StyleSheet.create({
   locationContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 2,
+    gap: 15,
   },
   locationText: {
     color: "#fff",
@@ -115,7 +131,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   bellWrapper: {
-    backgroundColor: "#0d1a47",
+    // backgroundColor: "#0d1a47",
     padding: 6,
     borderRadius: 10,
   },

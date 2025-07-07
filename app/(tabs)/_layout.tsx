@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 10,
+    alignSelf: "center",
   },
   activeWrapper: {
     backgroundColor: "white",

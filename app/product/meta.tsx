@@ -73,7 +73,7 @@ export default function UploadProductFunction({ navigation }) {
     formData.append("description", description);
     formData.append("price", price);
     formData.append("category", category);
-    formData.append("createdBy", "YOUR_ADMIN_ID"); // Replace accordingly
+    formData.append("createdBy", "68460be2acf270418acdf715"); // Replace accordingly
 
     formData.append("thumbnail", {
       uri: thumbnail.uri,
@@ -96,14 +96,21 @@ export default function UploadProductFunction({ navigation }) {
     formData.append("meta", JSON.stringify(metaObj));
 
     try {
-      await axios.post("https://yourapi.com/api/products", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      alert("Product uploaded!");
+      const response = await axios.post(
+        "http://localhost:5003/mobile/products",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      alert(response.data.message);
       clearForm();
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed");
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to upload product";
+      alert(errorMessage);
+      console.error("Upload error:", error);
     } finally {
       setLoading(false);
     }

@@ -32,6 +32,8 @@ const EditProfile = () => {
     language: "English",
   });
   const { signOut } = useAuth();
+  const [loadingLogout, setLoadingLogout] = useState(false);
+
   const [settings, setSettings] = useState({
     notifications: true,
   });
@@ -167,8 +169,14 @@ const EditProfile = () => {
         </TouchableOpacity>
 
         {/* LOGOUT BUTTON (Always visible) */}
-        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-          <Text style={styles.logoutText}>Log Out</Text>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={signOut}
+          disabled={loadingLogout}
+        >
+          <Text style={styles.logoutText}>
+            {loadingLogout ? "Logging out..." : "Log Out"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
