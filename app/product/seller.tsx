@@ -1,7 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function SellerDashboard() {
   const router = useRouter();
@@ -12,7 +20,9 @@ export default function SellerDashboard() {
   };
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="light" backgroundColor="red" />
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
@@ -37,7 +47,9 @@ export default function SellerDashboard() {
         {/* Profile */}
         <View style={styles.profileSection}>
           <Image
-            source={{ uri: "https://via.placeholder.com/50" }}
+            source={{
+              uri: "https://i.pinimg.com/736x/26/e5/95/26e5952ed3b0708f9b98246f4d4899ac.jpg",
+            }}
             style={styles.avatar}
           />
           <Text style={styles.name}>Keen's Bakery</Text>
@@ -46,16 +58,18 @@ export default function SellerDashboard() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          {[
-            { title: "Sold", value: "120" },
-            { title: "Earnings", value: "$2,400" },
-            { title: "Listings", value: "15" },
-          ].map((item, index) => (
-            <View key={index} style={styles.statCard}>
-              <Text style={styles.statValue}>{item.value}</Text>
-              <Text style={styles.statTitle}>{item.title}</Text>
-            </View>
-          ))}
+          <View style={[styles.statCard, { backgroundColor: "#FFE6E6" }]}>
+            <Text style={[styles.statValue, { color: "#A52A2A" }]}>120</Text>
+            <Text style={styles.statTitle}>Sold</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: "#FFF5E6" }]}>
+            <Text style={[styles.statValue, { color: "#DAA520" }]}>$2,400</Text>
+            <Text style={styles.statTitle}>Earnings</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: "#E6F0FF" }]}>
+            <Text style={[styles.statValue, { color: "#003366" }]}>15</Text>
+            <Text style={styles.statTitle}>Listings</Text>
+          </View>
         </View>
 
         {/* Action Grid */}
@@ -83,11 +97,15 @@ export default function SellerDashboard() {
           ))}
         </View>
       </View>
-    </>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "rgb(0,20,77)", // fills top area behind status bar
+  },
   container: {
     flex: 1,
     paddingHorizontal: 20,
@@ -107,7 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
-    marginTop: 20,
+    marginTop: 10,
   },
   headerIcons: {
     flexDirection: "row",
@@ -128,9 +146,9 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   name: {
     fontSize: 18,
@@ -147,7 +165,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   statCard: {
-    backgroundColor: "rgb(116,98,255)",
     padding: 15,
     borderRadius: 12,
     alignItems: "center",
@@ -156,7 +173,6 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "rgb(0,20,77)",
   },
   statTitle: {
     fontSize: 12,
