@@ -50,7 +50,8 @@ export default function YouTubeHeader() {
   };
 
   const sell = () => {
-    router.push("/product/uploadproduct");
+    router.push("/product/seller");
+    // router.push("/product/uploadproduct");
   };
 
   return (
