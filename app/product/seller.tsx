@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgb(0,20,77)",
     width: "100%",
     paddingHorizontal: 20,
+    paddingTop: 20,
     justifyContent: "space-evenly",
     borderBottomRightRadius: 20,
     borderBottomLeftRadius: 20,

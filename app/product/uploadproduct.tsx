@@ -445,7 +445,8 @@ const ProductUploadScreen = ({}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "rgb(215,223,243)",
+    paddingBottom: 50,
   },
   flex: {
     flex: 1,
