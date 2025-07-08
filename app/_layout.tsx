@@ -22,13 +22,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
       const storedUserId = await AsyncStorage.getItem("QurioUser");
       const storedUserEmail = await AsyncStorage.getItem("QurioUserEmail");
       const storedUserName = await AsyncStorage.getItem("QurioUserName");
-
-      if (storedUserId && storedUserEmail && storedUserName) {
-        console.log("Stored User Name:", storedUserName);
-      } else {
-        console.log("No user data found in AsyncStorage.");
-      }
-    }, 5000); // every 5 seconds
+    }); // every 5 seconds
 
     return () => clearInterval(interval);
   }, []);

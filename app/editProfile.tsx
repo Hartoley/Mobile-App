@@ -63,7 +63,13 @@ const EditProfile = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "rgb(215,223,243)",
+        paddingBottom: 50,
+      }}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Ionicons name="settings" size={18} color="white" />
@@ -218,6 +224,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",
+    paddingBottom: 10,
   },
   header: {
     backgroundColor: "rgb(0,20,77)",
