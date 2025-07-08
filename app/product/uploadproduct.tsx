@@ -3,7 +3,6 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-
 import {
   ActivityIndicator,
   Alert,
@@ -134,7 +133,11 @@ const ProductUploadScreen = ({}) => {
 
   useEffect(() => {
     const fields = categoryMetaFields[category] || [];
-    const defaultMeta = fields.map((field) => ({ key: field, value: "" }));
+    const defaultMeta = fields.map((field) => ({
+      key: field,
+      value: [],
+      temp: "",
+    }));
     setMeta(defaultMeta);
   }, [category]);
 
@@ -168,9 +171,19 @@ const ProductUploadScreen = ({}) => {
     setImages(updated);
   };
 
-  const updateMetaField = (index, value) => {
+  const addMetaOption = (index) => {
     const updated = [...meta];
-    updated[index].value = value;
+    const option = updated[index].temp.trim();
+    if (option && !updated[index].value.includes(option)) {
+      updated[index].value.push(option);
+      updated[index].temp = "";
+      setMeta(updated);
+    }
+  };
+
+  const removeMetaOption = (fieldIndex, optionIndex) => {
+    const updated = [...meta];
+    updated[fieldIndex].value.splice(optionIndex, 1);
     setMeta(updated);
   };
 
@@ -187,19 +200,16 @@ const ProductUploadScreen = ({}) => {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-
     setLoading(true);
 
     try {
       const formData = new FormData();
-      // Basic fields
       formData.append("title", title);
       formData.append("description", description);
       formData.append("price", price);
       formData.append("category", category);
-      formData.append("createdBy", "68460be2acf270418acdf715"); // Replace with actual user ID
+      formData.append("createdBy", "68460be2acf270418acdf715");
 
-      // Thumbnail image
       if (thumbnail) {
         formData.append("thumbnail", {
           uri: thumbnail.uri,
@@ -208,7 +218,6 @@ const ProductUploadScreen = ({}) => {
         });
       }
 
-      // Gallery images
       images.forEach((image, index) => {
         formData.append("images", {
           uri: image.uri,
@@ -217,21 +226,16 @@ const ProductUploadScreen = ({}) => {
         });
       });
 
-      // Meta fields
       const metaData = {};
       meta.forEach((field) => {
-        if (field.value) metaData[field.key] = field.value;
+        if (field.value.length > 0) metaData[field.key] = field.value;
       });
       formData.append("meta", JSON.stringify(metaData));
 
       const response = await axios.post(
         "https://qurioans.onrender.com/mobile/products",
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       Alert.alert(
@@ -258,12 +262,11 @@ const ProductUploadScreen = ({}) => {
     setThumbnail(null);
     setImages([]);
     const fields = categoryMetaFields[category] || [];
-    setMeta(fields.map((field) => ({ key: field, value: "" })));
+    setMeta(fields.map((field) => ({ key: field, value: [], temp: "" })));
   };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -274,13 +277,12 @@ const ProductUploadScreen = ({}) => {
         <Text style={styles.headerTitle}>Create New Product</Text>
       </View>
 
-      {/* Content */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Basic Info Section */}
+          {/* Basic Info */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Basic Information</Text>
 
@@ -305,10 +307,9 @@ const ProductUploadScreen = ({}) => {
               ]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Describe your product in detail"
+              placeholder="Describe your product"
               placeholderTextColor="#999"
               multiline
-              numberOfLines={4}
             />
             {errors.description && (
               <Text style={styles.errorText}>{errors.description}</Text>
@@ -348,11 +349,10 @@ const ProductUploadScreen = ({}) => {
             </View>
           </View>
 
-          {/* Media Section */}
+          {/* Media */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Media</Text>
 
-            <Text style={styles.label}>Thumbnail Image *</Text>
             <TouchableOpacity
               style={[
                 styles.uploadButton,
@@ -405,26 +405,57 @@ const ProductUploadScreen = ({}) => {
             )}
           </View>
 
-          {/* Meta Fields Section */}
+          {/* Meta Fields */}
           {meta.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Product Specifications</Text>
               {meta.map((item, index) => (
                 <View key={index} style={styles.metaRow}>
                   <Text style={styles.metaLabel}>{item.key}</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={item.value}
-                    onChangeText={(text) => updateMetaField(index, text)}
-                    placeholder={`Enter ${item.key.toLowerCase()}`}
-                    placeholderTextColor="#999"
-                  />
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <TextInput
+                      style={[styles.input, { flex: 1 }]}
+                      value={item.temp}
+                      onChangeText={(text) => {
+                        const updated = [...meta];
+                        updated[index].temp = text;
+                        setMeta(updated);
+                      }}
+                      placeholder={`Add ${item.key.toLowerCase()} option`}
+                      placeholderTextColor="#999"
+                    />
+                    <TouchableOpacity
+                      style={styles.addButton}
+                      onPress={() => addMetaOption(index)}
+                    >
+                      <Text style={styles.addButtonText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      marginTop: 5,
+                    }}
+                  >
+                    {item.value.map((v, i) => (
+                      <View key={i} style={styles.optionBadge}>
+                        <Text>{v}</Text>
+                        <TouchableOpacity
+                          onPress={() => removeMetaOption(index, i)}
+                        >
+                          <Ionicons name="close" size={12} color="#555" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
                 </View>
               ))}
             </View>
           )}
 
-          {/* Submit Button */}
+          {/* Submit */}
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}
@@ -448,12 +479,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgb(215,223,243)",
     paddingBottom: 50,
   },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 30,
-  },
+  flex: { flex: 1 },
+  scrollContent: { paddingBottom: 30 },
   header: {
     backgroundColor: "#001a41",
     paddingTop: 50,
@@ -462,14 +489,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  backButton: {
-    marginRight: 15,
-  },
-  headerTitle: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "600",
-  },
+  backButton: { marginRight: 15 },
+  headerTitle: { color: "white", fontSize: 18, fontWeight: "600" },
   section: {
     backgroundColor: "white",
     borderRadius: 10,
@@ -488,12 +509,7 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 20,
   },
-  label: {
-    fontSize: 14,
-    color: "#444",
-    marginBottom: 8,
-    fontWeight: "500",
-  },
+  label: { fontSize: 14, color: "#444", marginBottom: 8, fontWeight: "500" },
   input: {
     backgroundColor: "#f8f9fa",
     borderRadius: 8,
@@ -504,25 +520,11 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
     marginBottom: 15,
   },
-  inputError: {
-    borderColor: "#ff4444",
-    backgroundColor: "#fff5f5",
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 15,
-  },
-  priceContainer: {
-    flex: 1,
-  },
-  categoryContainer: {
-    flex: 1,
-  },
+  inputError: { borderColor: "#ff4444", backgroundColor: "#fff5f5" },
+  textArea: { height: 100, textAlignVertical: "top" },
+  row: { flexDirection: "row", justifyContent: "space-between", gap: 15 },
+  priceContainer: { flex: 1 },
+  categoryContainer: { flex: 1 },
   pickerContainer: {
     backgroundColor: "#f8f9fa",
     borderRadius: 8,
@@ -530,9 +532,7 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
     overflow: "hidden",
   },
-  picker: {
-    height: 50,
-  },
+  picker: { height: 50 },
   uploadButton: {
     backgroundColor: "#f0f2f5",
     padding: 15,
@@ -541,28 +541,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 15,
   },
-  buttonText: {
-    color: "#333",
-    fontWeight: "500",
-  },
+  buttonText: { color: "#333", fontWeight: "500" },
   thumbnailPreview: {
     width: "100%",
     height: 200,
     borderRadius: 8,
     marginBottom: 15,
   },
-  galleryContainer: {
-    marginBottom: 15,
-  },
-  imageWrapper: {
-    position: "relative",
-    marginRight: 10,
-  },
-  galleryImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
+  galleryContainer: { marginBottom: 15 },
+  imageWrapper: { position: "relative", marginRight: 10 },
+  galleryImage: { width: 100, height: 100, borderRadius: 8 },
   removeButton: {
     position: "absolute",
     top: 5,
@@ -574,14 +562,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  metaRow: {
-    marginBottom: 15,
-  },
+  metaRow: { marginBottom: 15 },
   metaLabel: {
     fontSize: 14,
     color: "#555",
     marginBottom: 5,
     fontWeight: "500",
+  },
+  addButton: {
+    backgroundColor: "#007bff",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  addButtonText: { color: "white", fontWeight: "600" },
+  optionBadge: {
+    backgroundColor: "#e0e0e0",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 5,
+    marginBottom: 5,
   },
   submitButton: {
     backgroundColor: "#003366",
@@ -592,11 +596,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  submitButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  submitButtonText: { color: "white", fontSize: 16, fontWeight: "600" },
   errorText: {
     color: "#ff4444",
     fontSize: 12,
