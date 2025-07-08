@@ -39,8 +39,24 @@ const categoryMetaFields = {
     "Features",
     "Delivery Options",
   ],
-  Books: ["Author", "Publisher", "ISBN", "Edition", "Condition", "Language"],
-  Clothing: ["Brand", "Size", "Color", "Material", "Condition", "Fit Type"],
+  Books: [
+    "Author",
+    "Publisher",
+    "ISBN",
+    "Edition",
+    "Condition",
+    "Language",
+    "Delivery Options",
+  ],
+  Clothing: [
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Condition",
+    "Fit Type",
+    "Delivery Options",
+  ],
   Food: [
     "Brand",
     "Ingredients",
@@ -48,6 +64,7 @@ const categoryMetaFields = {
     "Weight",
     "Packaging Type",
     "Dietary Info",
+    "Delivery Options",
   ],
   Hostel: [
     "Name",
@@ -74,8 +91,24 @@ const categoryMetaFields = {
     "Pricing Model",
     "Availability",
   ],
-  Bags: ["Brand", "Material", "Type", "Color", "Condition", "Size"],
-  Shoes: ["Brand", "Size", "Material", "Color", "Condition", "Style"],
+  Bags: [
+    "Brand",
+    "Material",
+    "Type",
+    "Color",
+    "Condition",
+    "Size",
+    "Delivery Options",
+  ],
+  Shoes: [
+    "Brand",
+    "Size",
+    "Material",
+    "Color",
+    "Condition",
+    "Style",
+    "Delivery Options",
+  ],
   Watch: [
     "Brand",
     "Model",
@@ -83,10 +116,27 @@ const categoryMetaFields = {
     "Condition",
     "Features",
     "Water Resistance",
+    "Delivery Options",
   ],
   New: ["Brand", "Model", "Warranty", "Features", "Color", "Availability"],
-  Men: ["Category", "Brand", "Size", "Color", "Material", "Condition"],
-  Women: ["Category", "Brand", "Size", "Color", "Material", "Condition"],
+  Men: [
+    "Category",
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Condition",
+    "Delivery Options",
+  ],
+  Women: [
+    "Category",
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Condition",
+    "Delivery Options",
+  ],
   Beauty: [
     "Brand",
     "Type",
@@ -94,8 +144,17 @@ const categoryMetaFields = {
     "Ingredients",
     "Skin Type",
     "Packaging",
+    "Delivery Options",
   ],
-  Fashion: ["Category", "Brand", "Size", "Color", "Material", "Style"],
+  Fashion: [
+    "Category",
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Style",
+    "Delivery Options",
+  ],
   Health: [
     "Brand",
     "Type",
@@ -103,12 +162,53 @@ const categoryMetaFields = {
     "Ingredients",
     "Dosage",
     "Packaging",
+    "Delivery Options",
   ],
-  Home: ["Category", "Brand", "Material", "Color", "Dimensions", "Condition"],
-  Lifestyle: ["Category", "Type", "Brand", "Material", "Features", "Condition"],
-  Sports: ["Type", "Brand", "Size", "Condition", "Material", "Usage"],
-  Kids: ["Category", "Brand", "Age Range", "Size", "Color", "Condition"],
-  Pets: ["Type", "Brand", "Expiry Date", "Ingredients", "Weight", "Packaging"],
+  Home: [
+    "Category",
+    "Brand",
+    "Material",
+    "Color",
+    "Dimensions",
+    "Condition",
+    "Delivery Options",
+  ],
+  Lifestyle: [
+    "Category",
+    "Type",
+    "Brand",
+    "Material",
+    "Features",
+    "Condition",
+    "Delivery Options",
+  ],
+  Sports: [
+    "Type",
+    "Brand",
+    "Size",
+    "Condition",
+    "Material",
+    "Usage",
+    "Delivery Options",
+  ],
+  Kids: [
+    "Category",
+    "Brand",
+    "Age Range",
+    "Size",
+    "Color",
+    "Condition",
+    "Delivery Options",
+  ],
+  Pets: [
+    "Type",
+    "Brand",
+    "Expiry Date",
+    "Ingredients",
+    "Weight",
+    "Packaging",
+    "Delivery Options",
+  ],
   Others: [
     "Category",
     "Brand",
@@ -116,8 +216,18 @@ const categoryMetaFields = {
     "Details",
     "Availability",
     "Location",
+
+    "Delivery Options",
   ],
 };
+
+const deliveryOptions = [
+  "Home Delivery",
+  "Pick-up Station",
+  "Doorstep Delivery",
+  "Express Delivery",
+  "All",
+];
 
 const ProductUploadScreen = ({}) => {
   const [title, setTitle] = useState("");
@@ -181,9 +291,9 @@ const ProductUploadScreen = ({}) => {
     }
   };
 
-  const removeMetaOption = (fieldIndex, optionIndex) => {
+  const removeMetaOption = (metaIndex, optionIndex) => {
     const updated = [...meta];
-    updated[fieldIndex].value.splice(optionIndex, 1);
+    updated[metaIndex].value.splice(optionIndex, 1);
     setMeta(updated);
   };
 
@@ -200,8 +310,8 @@ const ProductUploadScreen = ({}) => {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    setLoading(true);
 
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append("title", title);
@@ -238,18 +348,15 @@ const ProductUploadScreen = ({}) => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      Alert.alert(
-        "Success",
-        response.data.message || "Product uploaded successfully!"
-      );
+      Alert.alert("Success", response.data.message || "Product uploaded!");
       clearForm();
     } catch (error) {
-      const errorMessage =
+      Alert.alert(
+        "Error",
         error.response?.data?.message ||
-        error.message ||
-        "Failed to upload product";
-      Alert.alert("Error", errorMessage);
-      console.error("Upload error:", error);
+          error.message ||
+          "Failed to upload product"
+      );
     } finally {
       setLoading(false);
     }
@@ -282,23 +389,20 @@ const ProductUploadScreen = ({}) => {
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Basic Info */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Basic Information</Text>
 
-            <Text style={styles.label}>Product Title *</Text>
             <TextInput
               style={[styles.input, errors.title && styles.inputError]}
               value={title}
               onChangeText={setTitle}
-              placeholder="Enter product title"
+              placeholder="Product Title"
               placeholderTextColor="#999"
             />
             {errors.title && (
               <Text style={styles.errorText}>{errors.title}</Text>
             )}
 
-            <Text style={styles.label}>Description *</Text>
             <TextInput
               style={[
                 styles.input,
@@ -307,49 +411,41 @@ const ProductUploadScreen = ({}) => {
               ]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Describe your product"
+              placeholder="Description"
               placeholderTextColor="#999"
               multiline
+              numberOfLines={4}
             />
             {errors.description && (
               <Text style={styles.errorText}>{errors.description}</Text>
             )}
 
-            <View style={styles.row}>
-              <View style={styles.priceContainer}>
-                <Text style={styles.label}>Price *</Text>
-                <TextInput
-                  style={[styles.input, errors.price && styles.inputError]}
-                  value={price}
-                  onChangeText={setPrice}
-                  placeholder="0.00"
-                  placeholderTextColor="#999"
-                  keyboardType="numeric"
-                />
-                {errors.price && (
-                  <Text style={styles.errorText}>{errors.price}</Text>
-                )}
-              </View>
+            <TextInput
+              style={[styles.input, errors.price && styles.inputError]}
+              value={price}
+              onChangeText={setPrice}
+              placeholder="Price"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+            />
+            {errors.price && (
+              <Text style={styles.errorText}>{errors.price}</Text>
+            )}
 
-              <View style={styles.categoryContainer}>
-                <Text style={styles.label}>Category *</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={category}
-                    onValueChange={setCategory}
-                    dropdownIconColor="#555"
-                    style={styles.picker}
-                  >
-                    {Object.keys(categoryMetaFields).map((cat) => (
-                      <Picker.Item key={cat} label={cat} value={cat} />
-                    ))}
-                  </Picker>
-                </View>
-              </View>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={category}
+                onValueChange={setCategory}
+                dropdownIconColor="#555"
+                style={styles.picker}
+              >
+                {Object.keys(categoryMetaFields).map((cat) => (
+                  <Picker.Item key={cat} label={cat} value={cat} />
+                ))}
+              </Picker>
             </View>
           </View>
 
-          {/* Media */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Media</Text>
 
@@ -374,15 +470,14 @@ const ProductUploadScreen = ({}) => {
               <Text style={styles.errorText}>{errors.thumbnail}</Text>
             )}
 
-            <Text style={styles.label}>
-              Additional Images ({images.length}/5)
-            </Text>
             <TouchableOpacity
               style={styles.uploadButton}
               onPress={pickImages}
               disabled={images.length >= 5}
             >
-              <Text style={styles.buttonText}>Add Images</Text>
+              <Text style={styles.buttonText}>
+                Add Images ({images.length}/5)
+              </Text>
             </TouchableOpacity>
 
             {images.length > 0 && (
@@ -397,7 +492,7 @@ const ProductUploadScreen = ({}) => {
                       style={styles.removeButton}
                       onPress={() => removeImage(index)}
                     >
-                      <Ionicons name="close" size={16} color="white" />
+                      <Ionicons name="close" size={12} color="white" />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -405,57 +500,80 @@ const ProductUploadScreen = ({}) => {
             )}
           </View>
 
-          {/* Meta Fields */}
           {meta.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Product Specifications</Text>
               {meta.map((item, index) => (
                 <View key={index} style={styles.metaRow}>
                   <Text style={styles.metaLabel}>{item.key}</Text>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <TextInput
-                      style={[styles.input, { flex: 1 }]}
-                      value={item.temp}
-                      onChangeText={(text) => {
-                        const updated = [...meta];
-                        updated[index].temp = text;
-                        setMeta(updated);
-                      }}
-                      placeholder={`Add ${item.key.toLowerCase()} option`}
-                      placeholderTextColor="#999"
-                    />
-                    <TouchableOpacity
-                      style={styles.addButton}
-                      onPress={() => addMetaOption(index)}
-                    >
-                      <Text style={styles.addButtonText}>Add</Text>
-                    </TouchableOpacity>
-                  </View>
 
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      flexWrap: "wrap",
-                      marginTop: 5,
-                    }}
-                  >
-                    {item.value.map((v, i) => (
-                      <View key={i} style={styles.optionBadge}>
-                        <Text>{v}</Text>
+                  {item.key === "Delivery Options" ? (
+                    <View style={styles.pickerContainer}>
+                      <Picker
+                        selectedValue={item.value[0] || ""}
+                        onValueChange={(value) => {
+                          const updated = [...meta];
+                          updated[index].value = [value];
+                          setMeta(updated);
+                        }}
+                        dropdownIconColor="#555"
+                        style={styles.picker}
+                      >
+                        <Picker.Item label="Select delivery option" value="" />
+                        {deliveryOptions.map((opt, i) => (
+                          <Picker.Item key={i} label={opt} value={opt} />
+                        ))}
+                      </Picker>
+                    </View>
+                  ) : (
+                    <>
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <TextInput
+                          style={[styles.input, { flex: 1 }]}
+                          value={item.temp}
+                          onChangeText={(text) => {
+                            const updated = [...meta];
+                            updated[index].temp = text;
+                            setMeta(updated);
+                          }}
+                          placeholder={`Add ${item.key.toLowerCase()} option`}
+                          placeholderTextColor="#999"
+                        />
                         <TouchableOpacity
-                          onPress={() => removeMetaOption(index, i)}
+                          style={styles.addButton}
+                          onPress={() => addMetaOption(index)}
                         >
-                          <Ionicons name="close" size={12} color="#555" />
+                          <Text style={styles.addButtonText}>Add</Text>
                         </TouchableOpacity>
                       </View>
-                    ))}
-                  </View>
+
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          flexWrap: "wrap",
+                          marginTop: 5,
+                        }}
+                      >
+                        {item.value.map((v, i) => (
+                          <View key={i} style={styles.optionBadge}>
+                            <Text>{v}</Text>
+                            <TouchableOpacity
+                              onPress={() => removeMetaOption(index, i)}
+                            >
+                              <Ionicons name="close" size={12} color="#555" />
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                      </View>
+                    </>
+                  )}
                 </View>
               ))}
             </View>
           )}
 
-          {/* Submit */}
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}

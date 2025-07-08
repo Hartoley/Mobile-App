@@ -3,7 +3,6 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-
 import {
   ActivityIndicator,
   Alert,
@@ -120,9 +119,7 @@ const categoryMetaFields = {
   ],
 };
 
-const multipleOptionFields = ["Features", "Ingredients", "Facilities"];
-
-const ProductUploadScreen = () => {
+const ProductUploadScreen = ({}) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -138,7 +135,8 @@ const ProductUploadScreen = () => {
     const fields = categoryMetaFields[category] || [];
     const defaultMeta = fields.map((field) => ({
       key: field,
-      value: multipleOptionFields.includes(field) ? [] : "",
+      value: [],
+      temp: "",
     }));
     setMeta(defaultMeta);
   }, [category]);
@@ -173,19 +171,20 @@ const ProductUploadScreen = () => {
     setImages(updated);
   };
 
-  const updateMetaField = (index, value) => {
+  const addMetaOption = (index) => {
     const updated = [...meta];
-    updated[index].value = value;
-    setMeta(updated);
-  };
-
-  const addMetaOption = (index, option) => {
-    if (!option.trim()) return;
-    const updated = [...meta];
-    if (!updated[index].value.includes(option)) {
+    const option = updated[index].temp.trim();
+    if (option && !updated[index].value.includes(option)) {
       updated[index].value.push(option);
+      updated[index].temp = "";
       setMeta(updated);
     }
+  };
+
+  const removeMetaOption = (fieldIndex, optionIndex) => {
+    const updated = [...meta];
+    updated[fieldIndex].value.splice(optionIndex, 1);
+    setMeta(updated);
   };
 
   const validate = () => {
@@ -201,7 +200,6 @@ const ProductUploadScreen = () => {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-
     setLoading(true);
 
     try {
@@ -210,7 +208,7 @@ const ProductUploadScreen = () => {
       formData.append("description", description);
       formData.append("price", price);
       formData.append("category", category);
-      formData.append("createdBy", "68460be2acf270418acdf715"); // Replace with actual user ID
+      formData.append("createdBy", "68460be2acf270418acdf715");
 
       if (thumbnail) {
         formData.append("thumbnail", {
@@ -230,20 +228,20 @@ const ProductUploadScreen = () => {
 
       const metaData = {};
       meta.forEach((field) => {
-        if (field.value && field.value.length !== 0)
-          metaData[field.key] = field.value;
+        if (field.value.length > 0) metaData[field.key] = field.value;
       });
       formData.append("meta", JSON.stringify(metaData));
 
       const response = await axios.post(
         "https://qurioans.onrender.com/mobile/products",
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      Alert.alert("Success", response.data.message || "Product uploaded!");
+      Alert.alert(
+        "Success",
+        response.data.message || "Product uploaded successfully!"
+      );
       clearForm();
     } catch (error) {
       const errorMessage =
@@ -264,12 +262,7 @@ const ProductUploadScreen = () => {
     setThumbnail(null);
     setImages([]);
     const fields = categoryMetaFields[category] || [];
-    setMeta(
-      fields.map((field) => ({
-        key: field,
-        value: multipleOptionFields.includes(field) ? [] : "",
-      }))
-    );
+    setMeta(fields.map((field) => ({ key: field, value: [], temp: "" })));
   };
 
   return (
@@ -289,6 +282,7 @@ const ProductUploadScreen = () => {
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Basic Info */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Basic Information</Text>
 
@@ -355,10 +349,10 @@ const ProductUploadScreen = () => {
             </View>
           </View>
 
+          {/* Media */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Media</Text>
 
-            <Text style={styles.label}>Thumbnail Image *</Text>
             <TouchableOpacity
               style={[
                 styles.uploadButton,
@@ -411,72 +405,57 @@ const ProductUploadScreen = () => {
             )}
           </View>
 
+          {/* Meta Fields */}
           {meta.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Product Specifications</Text>
               {meta.map((item, index) => (
                 <View key={index} style={styles.metaRow}>
                   <Text style={styles.metaLabel}>{item.key}</Text>
-
-                  {multipleOptionFields.includes(item.key) ? (
-                    <View>
-                      <TextInput
-                        style={styles.input}
-                        placeholder={`Add ${item.key.toLowerCase()} option`}
-                        placeholderTextColor="#999"
-                        onSubmitEditing={(e) =>
-                          addMetaOption(index, e.nativeEvent.text)
-                        }
-                      />
-                      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                        {item.value.map((v, i) => (
-                          <View key={i} style={styles.optionBadge}>
-                            <Text>{v}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  ) : item.key === "Delivery Options" ? (
-                    <View style={styles.pickerContainer}>
-                      <Picker
-                        selectedValue={item.value}
-                        onValueChange={(value) => updateMetaField(index, value)}
-                        dropdownIconColor="#555"
-                        style={styles.picker}
-                      >
-                        <Picker.Item label="Select delivery option" value="" />
-                        <Picker.Item
-                          label="Home Delivery"
-                          value="Home Delivery"
-                        />
-                        <Picker.Item
-                          label="Pick-up Station"
-                          value="Pick-up Station"
-                        />
-                        <Picker.Item
-                          label="Doorstep Delivery"
-                          value="Doorstep Delivery"
-                        />
-                        <Picker.Item
-                          label="Express Delivery"
-                          value="Express Delivery"
-                        />
-                      </Picker>
-                    </View>
-                  ) : (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <TextInput
-                      style={styles.input}
-                      value={item.value}
-                      onChangeText={(text) => updateMetaField(index, text)}
-                      placeholder={`Enter ${item.key.toLowerCase()}`}
+                      style={[styles.input, { flex: 1 }]}
+                      value={item.temp}
+                      onChangeText={(text) => {
+                        const updated = [...meta];
+                        updated[index].temp = text;
+                        setMeta(updated);
+                      }}
+                      placeholder={`Add ${item.key.toLowerCase()} option`}
                       placeholderTextColor="#999"
                     />
-                  )}
+                    <TouchableOpacity
+                      style={styles.addButton}
+                      onPress={() => addMetaOption(index)}
+                    >
+                      <Text style={styles.addButtonText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      marginTop: 5,
+                    }}
+                  >
+                    {item.value.map((v, i) => (
+                      <View key={i} style={styles.optionBadge}>
+                        <Text>{v}</Text>
+                        <TouchableOpacity
+                          onPress={() => removeMetaOption(index, i)}
+                        >
+                          <Ionicons name="close" size={12} color="#555" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
                 </View>
               ))}
             </View>
           )}
 
+          {/* Submit */}
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}
@@ -530,12 +509,7 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 20,
   },
-  label: {
-    fontSize: 14,
-    color: "#444",
-    marginBottom: 8,
-    fontWeight: "500",
-  },
+  label: { fontSize: 14, color: "#444", marginBottom: 8, fontWeight: "500" },
   input: {
     backgroundColor: "#f8f9fa",
     borderRadius: 8,
@@ -546,10 +520,7 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
     marginBottom: 15,
   },
-  inputError: {
-    borderColor: "#ff4444",
-    backgroundColor: "#fff5f5",
-  },
+  inputError: { borderColor: "#ff4444", backgroundColor: "#fff5f5" },
   textArea: { height: 100, textAlignVertical: "top" },
   row: { flexDirection: "row", justifyContent: "space-between", gap: 15 },
   priceContainer: { flex: 1 },
@@ -598,13 +569,23 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     fontWeight: "500",
   },
+  addButton: {
+    backgroundColor: "#007bff",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  addButtonText: { color: "white", fontWeight: "600" },
   optionBadge: {
-    backgroundColor: "#e6f0ff",
+    backgroundColor: "#e0e0e0",
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 15,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 5,
-    marginTop: 5,
+    marginBottom: 5,
   },
   submitButton: {
     backgroundColor: "#003366",
