@@ -1,8 +1,10 @@
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -240,6 +242,14 @@ const ProductUploadScreen = ({}) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigation = useNavigation();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerIndex, setDatePickerIndex] = useState(null);
+
+  const updateMetaField = (index, value) => {
+    const updated = [...meta];
+    updated[index].value = value;
+    setMeta(updated);
+  };
 
   useEffect(() => {
     const fields = categoryMetaFields[category] || [];
@@ -253,7 +263,8 @@ const ProductUploadScreen = ({}) => {
 
   const pickThumbnail = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.Images,
+
       quality: 0.8,
     });
     if (!result.canceled) setThumbnail(result.assets[0]);
@@ -265,7 +276,8 @@ const ProductUploadScreen = ({}) => {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.Images,
+
       allowsMultipleSelection: true,
       quality: 0.7,
     });
@@ -510,64 +522,64 @@ const ProductUploadScreen = ({}) => {
                   {item.key === "Delivery Options" ? (
                     <View style={styles.pickerContainer}>
                       <Picker
-                        selectedValue={item.value[0] || ""}
-                        onValueChange={(value) => {
-                          const updated = [...meta];
-                          updated[index].value = [value];
-                          setMeta(updated);
-                        }}
+                        selectedValue={item.value}
+                        onValueChange={(value) => updateMetaField(index, value)}
                         dropdownIconColor="#555"
                         style={styles.picker}
                       >
                         <Picker.Item label="Select delivery option" value="" />
-                        {deliveryOptions.map((opt, i) => (
-                          <Picker.Item key={i} label={opt} value={opt} />
-                        ))}
+                        <Picker.Item
+                          label="Home Delivery"
+                          value="Home Delivery"
+                        />
+                        <Picker.Item
+                          label="Pick-up Station"
+                          value="Pick-up Station"
+                        />
+                        <Picker.Item
+                          label="Doorstep Delivery"
+                          value="Doorstep Delivery"
+                        />
+                        <Picker.Item
+                          label="Express Delivery"
+                          value="Express Delivery"
+                        />
+                        <Picker.Item
+                          label="All Delivery Availble"
+                          value="All Delivery Availble"
+                        />
                       </Picker>
                     </View>
-                  ) : (
-                    <>
+                  ) : item.key === "Expiry Date" ? (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowDatePicker(true);
+                        setDatePickerIndex(index);
+                      }}
+                      style={styles.datePickerButton}
+                    >
                       <View
                         style={{ flexDirection: "row", alignItems: "center" }}
                       >
-                        <TextInput
-                          style={[styles.input, { flex: 1 }]}
-                          value={item.temp}
-                          onChangeText={(text) => {
-                            const updated = [...meta];
-                            updated[index].temp = text;
-                            setMeta(updated);
-                          }}
-                          placeholder={`Add ${item.key.toLowerCase()} option`}
-                          placeholderTextColor="#999"
+                        <Ionicons
+                          name="calendar-outline"
+                          size={18}
+                          color="#555"
+                          style={{ marginRight: 8 }}
                         />
-                        <TouchableOpacity
-                          style={styles.addButton}
-                          onPress={() => addMetaOption(index)}
-                        >
-                          <Text style={styles.addButtonText}>Add</Text>
-                        </TouchableOpacity>
+                        <Text style={styles.datePickerText}>
+                          {item.value ? item.value : "Select expiry date"}
+                        </Text>
                       </View>
-
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          flexWrap: "wrap",
-                          marginTop: 5,
-                        }}
-                      >
-                        {item.value.map((v, i) => (
-                          <View key={i} style={styles.optionBadge}>
-                            <Text>{v}</Text>
-                            <TouchableOpacity
-                              onPress={() => removeMetaOption(index, i)}
-                            >
-                              <Ionicons name="close" size={12} color="#555" />
-                            </TouchableOpacity>
-                          </View>
-                        ))}
-                      </View>
-                    </>
+                    </TouchableOpacity>
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      value={item.value}
+                      onChangeText={(text) => updateMetaField(index, text)}
+                      placeholder={`Enter ${item.key.toLowerCase()}`}
+                      placeholderTextColor="#999"
+                    />
                   )}
                 </View>
               ))}
@@ -585,6 +597,24 @@ const ProductUploadScreen = ({}) => {
               <Text style={styles.submitButtonText}>List Product</Text>
             )}
           </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={new Date()}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              minimumDate={new Date()} // 🚨 prevents past dates
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate && datePickerIndex !== null) {
+                  const formattedDate = selectedDate
+                    .toISOString()
+                    .split("T")[0];
+                  updateMetaField(datePickerIndex, formattedDate);
+                  setDatePickerIndex(null);
+                }
+              }}
+            />
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -638,6 +668,30 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
     marginBottom: 15,
   },
+  datePickerButton: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    padding: 12,
+    justifyContent: "center",
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+
+  datePickerText: {
+    color: "#333",
+    fontSize: 15,
+  },
+  datePickerButton: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    padding: 12,
+    justifyContent: "center",
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+
   inputError: { borderColor: "#ff4444", backgroundColor: "#fff5f5" },
   textArea: { height: 100, textAlignVertical: "top" },
   row: { flexDirection: "row", justifyContent: "space-between", gap: 15 },
