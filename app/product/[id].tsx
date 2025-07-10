@@ -1,7 +1,6 @@
 import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
-
 import {
   Dimensions,
   FlatList,
@@ -28,9 +27,9 @@ export default function ProductDetail() {
   const flatListRef = useRef();
 
   useEffect(() => {
-    fetch(`https://dummyjson.com/products/${id}`)
+    fetch(`https://qurioans.onrender.com/mobile/product/${id}`)
       .then((res) => res.json())
-      .then(setProduct)
+      .then((res) => setProduct(res.product))
       .catch(console.error);
   }, [id]);
 
@@ -68,7 +67,7 @@ export default function ProductDetail() {
           )}
         />
         <View style={styles.dots}>
-          {product.images.map((_, index) => (
+          {product.images?.map((_, index) => (
             <View
               key={index}
               style={[
@@ -83,9 +82,8 @@ export default function ProductDetail() {
         </View>
       </View>
 
-      {/* Scrollable Details */}
+      {/* Scrollable Content */}
       <ScrollView style={styles.content}>
-        {/* Title & Price */}
         <View style={styles.titleRow}>
           <Text style={styles.title}>{product.title}</Text>
           <Text style={styles.price}>₦ {product.price}</Text>
@@ -96,72 +94,43 @@ export default function ProductDetail() {
           {[...Array(5)].map((_, i) => (
             <AntDesign
               key={i}
-              name={i < Math.round(product.rating) ? "star" : "staro"}
+              name={i < Math.round(product.rating || 0) ? "star" : "staro"}
               size={14}
               color="#FFC107"
             />
           ))}
         </View>
 
+        {/* Seller Info */}
         <View
           style={{
             flexDirection: "row",
-            alignItems: "center",
             justifyContent: "space-between",
-            width: "100%",
+            alignItems: "center",
+            paddingVertical: 12,
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-
-              paddingVertical: 12,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Image
+              source={{
+                uri: "https://i.pinimg.com/736x/e6/d8/00/e6d8009373c9625e7d80965dc8f842fa.jpg",
               }}
-            >
-              <Image
-                source={{
-                  uri: "https://i.pinimg.com/736x/e6/d8/00/e6d8009373c9625e7d80965dc8f842fa.jpg",
-                }} // replace with seller image
-                style={{ width: 50, height: 50, borderRadius: 25 }}
-              />
-              <View style={{ marginLeft: 10 }}>
-                <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                  Jenny Doe
-                </Text>
-                <Text style={{ fontSize: 12, color: "grey" }}>Seller</Text>
-              </View>
+              style={{ width: 50, height: 50, borderRadius: 25 }}
+            />
+            <View style={{ marginLeft: 10 }}>
+              <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+                Jenny Doe
+              </Text>
+              <Text style={{ fontSize: 12, color: "grey" }}>Seller</Text>
             </View>
-
-            <View style={{ marginLeft: 110, flexDirection: "row", gap: 10 }}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "rgb(112,167,245)",
-                  padding: 8,
-                  borderRadius: 20,
-                }}
-              >
-                <MaterialIcons name="chat" size={20} color="rgb(0,20,77)" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "rgb(112,167,245)",
-                  padding: 8,
-                  borderRadius: 20,
-                }}
-              >
-                <Feather name="phone" size={20} color="rgb(0,20,77)" />
-              </TouchableOpacity>
-            </View>
+          </View>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TouchableOpacity style={styles.iconBtn}>
+              <MaterialIcons name="chat" size={20} color="rgb(0,20,77)" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconBtn}>
+              <Feather name="phone" size={20} color="rgb(0,20,77)" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -175,28 +144,37 @@ export default function ProductDetail() {
           </TouchableOpacity>
         </View>
 
-        {/* Description & Expanded Details */}
-        <Text style={styles.description}>
-          {showMore
-            ? `${product.description}\n\nCategory: ${
-                product.category
-              }\nBrand: ${product.brand}\nStock: ${
-                product.stock
-              }\nAvailability: ${
-                product.availabilityStatus || "In stock"
-              }\nSKU: ${product.sku || "N/A"}\nWeight: ${
-                product.weight || "-"
-              }kg\nDimensions: ${product.dimensions?.width} x ${
-                product.dimensions?.height
-              } x ${product.dimensions?.depth}\nWarranty: ${
-                product.warrantyInformation || "Not available"
-              }\nShipping: ${
-                product.shippingInformation || "Ships soon"
-              }\nReturn Policy: ${
-                product.returnPolicy || "30 days"
-              }\nMin. Order: ${product.minimumOrderQuantity || 1}`
-            : `${product.description}`}
-        </Text>
+        {/* Description */}
+        <Text style={styles.description}>{product.description}</Text>
+
+        {showMore && (
+          <>
+            <Text style={styles.description}>Category: {product.category}</Text>
+            <Text style={styles.description}>Brand: {product.brand}</Text>
+            <Text style={styles.description}>Stock: {product.stock}</Text>
+            <Text style={styles.description}>
+              Availability: {product.availabilityStatus}
+            </Text>
+            <Text style={styles.description}>SKU: {product.sku}</Text>
+            <Text style={styles.description}>Weight: {product.weight} kg</Text>
+            <Text style={styles.description}>
+              Dimensions: {product.dimensions?.width} x{" "}
+              {product.dimensions?.height} x {product.dimensions?.depth}
+            </Text>
+            <Text style={styles.description}>
+              Warranty: {product.warrantyInformation}
+            </Text>
+            <Text style={styles.description}>
+              Shipping: {product.shippingInformation}
+            </Text>
+            <Text style={styles.description}>
+              Return Policy: {product.returnPolicy}
+            </Text>
+            <Text style={styles.description}>
+              Min. Order: {product.minimumOrderQuantity}
+            </Text>
+          </>
+        )}
 
         <TouchableOpacity onPress={() => setShowMore(!showMore)}>
           <Text style={styles.seeMore}>
@@ -210,13 +188,15 @@ export default function ProductDetail() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Reviews Modal */}
+      {/* Review Modal */}
       <Modal visible={reviewModal} animationType="slide">
         <View style={styles.modal}>
           <Text style={styles.reviewTitle}>Customer Reviews</Text>
           {product.reviews?.map((rev, i) => (
             <View key={i} style={styles.reviewBox}>
-              <Text style={styles.reviewer}>{rev.reviewerName}</Text>
+              <Text style={styles.reviewer}>
+                {rev.reviewerName || "Anonymous"}
+              </Text>
               <Text style={styles.comment}>"{rev.comment}"</Text>
               <View style={styles.rating}>
                 {[...Array(5)].map((_, j) => (
@@ -243,11 +223,7 @@ export default function ProductDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "rgb(215,223,243)",
-    paddingTop: 40,
-  },
+  container: { flex: 1, backgroundColor: "rgb(215,223,243)", paddingTop: 40 },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -318,8 +294,8 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 12,
     color: "#444",
-    marginBottom: 12,
     lineHeight: 18,
+    marginBottom: 4,
   },
   seeMore: {
     fontSize: 12,
@@ -338,6 +314,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "600",
+  },
+  iconBtn: {
+    backgroundColor: "rgb(112,167,245)",
+    padding: 8,
+    borderRadius: 20,
   },
   modal: {
     flex: 1,

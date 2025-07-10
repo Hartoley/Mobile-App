@@ -19,6 +19,10 @@ export default function SellerDashboard() {
     router.push("/product/uploadproduct");
   };
 
+  const Manage = () => {
+    router.push("/product/manageProducts");
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" backgroundColor="red" />
@@ -80,7 +84,11 @@ export default function SellerDashboard() {
               label: "Upload Product",
               onPress: upload,
             },
-            { icon: "create-outline", label: "Manage Products" },
+            {
+              icon: "create-outline",
+              label: "Manage Products",
+              onPress: Manage,
+            },
             { icon: "cube-outline", label: "Inventory" },
             { icon: "stats-chart-outline", label: "Sales Analytics" },
             { icon: "notifications-outline", label: "Notifications" },

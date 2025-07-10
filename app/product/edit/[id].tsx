@@ -1,3 +1,5 @@
+import Category from "@/app/category";
+import YouTubeHeader from "@/app/header";
 import { AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -10,47 +12,50 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Category from "../category";
-import YouTubeHeader from "../header";
 
-export default function Products() {
+export default function ManageProducts() {
   const router = useRouter();
+
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (pageNum = 1) => {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://qurioans.onrender.com/mobile/products?page=1&limit=20"
+        `https://qurioans.onrender.com/mobile/products?page=${pageNum}&limit=10`
       );
       const data = await res.json();
-      setProducts(data.products);
-    } catch (err) {
-      console.error("Failed to fetch:", err);
+      setProducts(data.products || []);
+      setTotalPages(data.totalPages || 1);
+      setPage(data.currentPage || pageNum);
+    } catch (error) {
+      console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchProducts().finally(() => setRefreshing(false));
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchProducts(1).finally(() => setRefreshing(false));
+  };
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => router.push(`/product/${item._id}`)}
+      onPress={() => router.push(`/products/edit/${item._id}`)}
     >
       <Image source={{ uri: item.thumbnail }} style={styles.image} />
       <TouchableOpacity style={styles.heart}>
-        <AntDesign name="hearto" size={16} color="#f55" />
+        <AntDesign name="edit" size={16} color="#f55" />
       </TouchableOpacity>
       <Text style={styles.title} numberOfLines={1}>
         {item.title}
@@ -73,17 +78,9 @@ export default function Products() {
     <View key={index} style={styles.card}>
       <View style={[styles.image, { backgroundColor: "#e5e7eb" }]} />
       <View style={styles.heart}>
-        <AntDesign name="hearto" size={16} color="#ccc" />
+        <AntDesign name="edit" size={16} color="#ccc" />
       </View>
-      <View
-        style={{
-          height: 12,
-          backgroundColor: "#e5e7eb",
-          borderRadius: 4,
-          marginTop: 8,
-          width: "70%",
-        }}
-      />
+      <View style={styles.placeholderBar} />
       <View style={[styles.row, { marginTop: 6 }]}>
         {[...Array(5)].map((_, i) => (
           <AntDesign key={i} name="star" size={12} color="#d1d5db" />
@@ -105,6 +102,7 @@ export default function Products() {
     <View className="h-full w-full bg-[rgb(215,223,243)]">
       <YouTubeHeader />
       <Category />
+
       <FlatList
         data={loading || refreshing ? Array.from({ length: 6 }) : products}
         renderItem={loading || refreshing ? renderPlaceholder : renderItem}
@@ -118,14 +116,47 @@ export default function Products() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
+
+      <View style={styles.pagination}>
+        <TouchableOpacity
+          disabled={page <= 1}
+          onPress={() => fetchProducts(page - 1)}
+        >
+          <Text style={[styles.pageButton, page <= 1 && styles.disabled]}>
+            Previous
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.pageInfo}>
+          Page {page} of {totalPages}
+        </Text>
+
+        <TouchableOpacity
+          disabled={page >= totalPages}
+          onPress={() => fetchProducts(page + 1)}
+        >
+          <Text
+            style={[styles.pageButton, page >= totalPages && styles.disabled]}
+          >
+            Next
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  headerText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10,
+    color: "#001a41",
+  },
   list: {
     paddingHorizontal: 10,
-    paddingBottom: 100, // for buyer screen comfort
+    paddingBottom: 20,
   },
   card: {
     backgroundColor: "#fff",
@@ -150,6 +181,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 10,
     right: 10,
+    backgroundColor: "#fff",
+    padding: 4,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
   },
   title: {
     fontWeight: "400",
@@ -166,5 +205,31 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "rgb(0,20,77)",
     fontSize: 12,
+  },
+  placeholderBar: {
+    height: 12,
+    backgroundColor: "#e5e7eb",
+    borderRadius: 4,
+    marginTop: 8,
+    width: "70%",
+  },
+  pagination: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    alignItems: "center",
+  },
+  pageButton: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#003366",
+  },
+  disabled: {
+    color: "#aaa",
+  },
+  pageInfo: {
+    fontSize: 13,
+    color: "#555",
   },
 });
