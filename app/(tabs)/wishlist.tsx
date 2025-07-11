@@ -41,7 +41,7 @@ const Streaks = () => {
           title: item.title,
           price: item.price,
           thumbnail: item.thumbnail,
-          rating: item.rating || 0, // fallback if rating missing
+          rating: item.rating || 0,
         }));
         setWishlistItems(formatted);
       }
@@ -66,13 +66,9 @@ const Streaks = () => {
       style={styles.card}
       onPress={() => router.push(`/product/${item.id}`)}
     >
-      <Image
-        className="w-full"
-        source={{ uri: item.thumbnail }}
-        style={styles.image}
-      />
+      <Image source={{ uri: item.thumbnail }} style={styles.image} />
       <TouchableOpacity style={styles.heart}>
-        <AntDesign name="heart" size={16} color="#f55" />
+        <AntDesign name="heart" size={20} color="#f55" />
       </TouchableOpacity>
       <Text style={styles.title} numberOfLines={1}>
         {item.title}
@@ -95,7 +91,7 @@ const Streaks = () => {
     <View key={index} style={styles.card}>
       <View style={[styles.image, { backgroundColor: "#e5e7eb" }]} />
       <View style={styles.heart}>
-        <AntDesign name="hearto" size={16} color="#ccc" />
+        <AntDesign name="hearto" size={20} color="#ccc" />
       </View>
       <View
         style={{
@@ -125,31 +121,16 @@ const Streaks = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <View
-        style={{
-          backgroundColor: "rgb(0,20,77)",
-          height: "15%",
-          justifyContent: "center",
-          paddingVertical: 16,
-          alignItems: "center",
-          paddingTop: 40,
-          borderBottomLeftRadius: 20,
-          borderBottomRightRadius: 20,
-          flexDirection: "row",
-          gap: 5,
-        }}
-      >
+      <View style={styles.header}>
         <TouchableOpacity
-          className=" w-[30%]"
+          style={{ width: "30%" }}
           onPress={() => navigation.goBack()}
         >
           <AntDesign name="arrowleft" size={24} color="white" />
         </TouchableOpacity>
-        <View className="items-center gap-3 w-[50%] flex-row h-full">
+        <View style={styles.headerTitleContainer}>
           <Ionicons name="heart" size={18} color="red" />
-          <Text style={{ fontSize: 16, fontWeight: "bold", color: "white" }}>
-            My Wishlist
-          </Text>
+          <Text style={styles.headerTitle}>My Wishlist</Text>
         </View>
       </View>
 
@@ -183,6 +164,30 @@ const Streaks = () => {
 export default Streaks;
 
 const styles = StyleSheet.create({
+  header: {
+    backgroundColor: "rgb(0,20,77)",
+    height: "15%",
+    justifyContent: "center",
+    paddingVertical: 16,
+    alignItems: "center",
+    paddingTop: 40,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    flexDirection: "row",
+    gap: 5,
+  },
+  headerTitleContainer: {
+    alignItems: "center",
+    gap: 3,
+    width: "50%",
+    flexDirection: "row",
+    height: "100%",
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+  },
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",
@@ -195,41 +200,44 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 10,
+    padding: 14,
     marginBottom: 16,
-    width: "48%",
+    width: "47%",
     position: "relative",
     shadowColor: "#000",
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   image: {
     width: "100%",
-    height: 100,
+    height: 140,
     borderRadius: 12,
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
   heart: {
     position: "absolute",
     top: 10,
     right: 10,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 4,
   },
   title: {
-    fontWeight: "400",
-    fontSize: 12,
+    fontWeight: "600",
+    fontSize: 13,
     marginTop: 8,
     color: "rgb(0,20,77)",
-    fontFamily: "serif",
+    fontFamily: "sans-serif",
   },
   row: {
     flexDirection: "row",
     marginVertical: 4,
   },
   price: {
-    fontWeight: "700",
-    color: "rgb(0,20,77)",
-    fontSize: 12,
+    fontWeight: "bold",
+    color: "#0049b7",
+    fontSize: 14,
   },
 });
