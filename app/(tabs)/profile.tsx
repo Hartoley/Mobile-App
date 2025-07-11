@@ -1,6 +1,8 @@
 import { useAuth } from "@/lib/autht-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
 import {
   Dimensions,
   Image,
@@ -33,16 +35,67 @@ const Profile = () => {
     support: false,
   });
   const { signOut } = useAuth();
+  const router = useRouter();
+
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [storedUser, setStoredUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getStoredUser = async () => {
+      const id = await AsyncStorage.getItem("QurioUser");
+      setStoredUser(id);
+    };
+    getStoredUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!storedUser) return;
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `https://qurioans.onrender.com/qurioans/getuser/${storedUser}`
+        );
+        const data = await res.json();
+        if (data.status) {
+          setUser(data.data);
+        }
+      } catch (error) {
+        console.error("Fetch user failed:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [storedUser]);
 
   const toggleSection = (key: keyof typeof sections) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
-  const router = useRouter();
 
   const edit = () => {
     router.push("/editProfile");
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        {/* 🦴 Skeleton loader while fetching */}
+        <Text>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>No user data found</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "rgb(215,223,243)" }}>
@@ -50,14 +103,18 @@ const Profile = () => {
       <View style={styles.fixedTop}>
         <Image
           source={{
-            uri: "https://i.pinimg.com/736x/23/2e/d9/232ed9ce4e9a2829dbd5f7b2b909d8bf.jpg",
+            uri:
+              user.coverPhoto ||
+              "https://i.pinimg.com/736x/23/2e/d9/232ed9ce4e9a2829dbd5f7b2b909d8bf.jpg",
           }}
           style={styles.coverImage}
         />
         <View style={styles.avatarContainer}>
           <Image
             source={{
-              uri: "https://i.pinimg.com/736x/ab/d5/bf/abd5bf400a1475b76d8614cf6e815b8b.jpg",
+              uri:
+                user.avatarUrl ||
+                "https://i.pinimg.com/736x/ab/d5/bf/abd5bf400a1475b76d8614cf6e815b8b.jpg",
             }}
             style={styles.avatar}
           />
@@ -72,8 +129,8 @@ const Profile = () => {
       >
         <View style={{ marginTop: 200 }}>
           <View style={styles.nameContainer}>
-            <Text style={styles.name}>Sakeena Zayn</Text>
-            <Text style={styles.email}>sakeena@example.com</Text>
+            <Text style={styles.name}>{user.userName || "Unnamed"}</Text>
+            <Text style={styles.email}>{user.email}</Text>
           </View>
 
           <Section
@@ -81,9 +138,14 @@ const Profile = () => {
             expanded={sections.account}
             onToggle={() => toggleSection("account")}
             items={[
-              { label: "Phone Number", value: "+123 456 7890" },
-              { label: "Address", value: "123 Main Street, New York, USA" },
-              { label: "Member Since", value: "March 2023" },
+              { label: "Phone Number", value: user.phoneNumber || "N/A" },
+              { label: "Address", value: user.address || "N/A" },
+              {
+                label: "Member Since",
+                value: user.createdAt
+                  ? new Date(user.createdAt).toDateString()
+                  : "N/A",
+              },
             ]}
           />
           <Section
@@ -101,8 +163,11 @@ const Profile = () => {
             expanded={sections.payments}
             onToggle={() => toggleSection("payments")}
             items={[
-              { label: "Payment Methods", value: "Visa **** 5432" },
-              { label: "Billing Address", value: "Same as delivery address" },
+              { label: "Payment Methods", value: user.card || "N/A" },
+              {
+                label: "Billing Address",
+                value: user.address || "Same as delivery address",
+              },
               { label: "Shipping Info", value: "Fast delivery, 3-5 days" },
             ]}
           />
@@ -111,8 +176,12 @@ const Profile = () => {
             expanded={sections.settings}
             onToggle={() => toggleSection("settings")}
             items={[
-              { label: "Notifications", type: "toggle", value: true },
-              { label: "Language", value: "English" },
+              {
+                label: "Notifications",
+                type: "toggle",
+                value: user.notificationPreferences?.push || false,
+              },
+              { label: "Language", value: user.language || "English" },
             ]}
           />
           <Section
@@ -154,6 +223,7 @@ const Section = ({
     label: string;
     value?: string | boolean;
     type?: "toggle";
+    onPress?: () => void;
   }[];
 }) => {
   return (
@@ -169,14 +239,19 @@ const Section = ({
 
       {expanded &&
         items.map((item, idx) => (
-          <View key={idx} style={styles.itemRow}>
+          <TouchableOpacity
+            key={idx}
+            style={styles.itemRow}
+            onPress={item.onPress}
+            disabled={!item.onPress}
+          >
             <Text style={styles.itemLabel}>{item.label}</Text>
             {item.type === "toggle" ? (
               <Switch value={!!item.value} disabled />
             ) : (
               <Text style={styles.itemValue}>{item.value}</Text>
             )}
-          </View>
+          </TouchableOpacity>
         ))}
     </View>
   );
@@ -213,7 +288,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    alignContent: "flex-start",
   },
   scrollContainer: {
     flex: 1,
@@ -273,26 +347,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: "#f5f3ff", // light purple background
+    backgroundColor: "#f5f3ff",
     borderWidth: 1,
-    borderColor: "#c4b5fd", // soft purple border
+    borderColor: "#c4b5fd",
     alignItems: "center",
     justifyContent: "center",
-    alignSelf: "center", // or center based on layout
+    alignSelf: "center",
   },
   editText: {
-    color: "#4c1d95", // deep purple text
+    color: "#4c1d95",
     fontWeight: "600",
     fontSize: 13,
-  },
-  logout: {
-    width: "90%",
-    height: 60,
-    alignSelf: "center",
-    backgroundColor: "white",
-    marginTop: 10,
-    borderRadius: 5,
-    justifyContent: "center",
-    paddingLeft: 10,
   },
 });

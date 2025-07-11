@@ -74,7 +74,6 @@ const EditProfile = () => {
         `https://qurioans.onrender.com/qurioans/getuser/${storedUser}`
       );
       const data = await response.json();
-      console.log("Fetch data", data);
 
       if (response.ok && data.data) {
         const user = data.data;
@@ -110,15 +109,20 @@ const EditProfile = () => {
   }, []);
 
   const pickAvatar = async () => {
+    console.log("pickAvatar clicked");
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    console.log("Permission status:", status);
     if (status !== "granted") {
       alert("Permission denied!");
       return;
     }
+
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: [ImagePicker.MediaType.IMAGE],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.5,
     });
+    console.log("Picker result:", result);
+
     if (!result.canceled) {
       const asset = result.assets[0];
       setAvatar({ uri: asset.uri });
