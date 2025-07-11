@@ -1,4 +1,5 @@
 import YouTubeHeader from "@/app/header";
+import { Picker } from "@react-native-picker/picker";
 import { useRoute } from "@react-navigation/native";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
@@ -282,7 +283,6 @@ export default function EditProductScreen() {
     if (images.length >= 5) return Alert.alert("Limit", "Max 5 images allowed");
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: false,
       quality: 0.7,
     });
     if (!result.canceled) {
@@ -303,16 +303,12 @@ export default function EditProductScreen() {
 
   const handleSave = async () => {
     const formData = new FormData();
-
     for (let key in form) {
-      if (key !== "meta") {
-        formData.append(key, form[key]);
-      }
+      if (key !== "meta") formData.append(key, form[key]);
     }
-
     formData.append("meta", JSON.stringify(form.meta));
 
-    if (thumbnail && thumbnail.uri) {
+    if (thumbnail?.uri && !thumbnail.uri.startsWith("http")) {
       formData.append("thumbnail", {
         uri: thumbnail.uri,
         type: "image/jpeg",
@@ -321,12 +317,13 @@ export default function EditProductScreen() {
     }
 
     images.forEach((img, i) => {
-      if (img.uri?.startsWith("http")) return; // skip already uploaded
-      formData.append("images", {
-        uri: img.uri,
-        type: "image/jpeg",
-        name: `img_${i}.jpg`,
-      });
+      if (!img.uri.startsWith("http")) {
+        formData.append("images", {
+          uri: img.uri,
+          type: "image/jpeg",
+          name: `img_${i}.jpg`,
+        });
+      }
     });
 
     try {
@@ -358,7 +355,7 @@ export default function EditProductScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#d7dff3" }}>
       <YouTubeHeader />
-      <ScrollView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.header}>Edit Product</Text>
 
         {[
@@ -395,7 +392,7 @@ export default function EditProductScreen() {
         </TouchableOpacity>
 
         <Text style={styles.label}>Gallery Images</Text>
-        <ScrollView horizontal style={{ marginBottom: 15 }}>
+        <ScrollView horizontal style={{ marginBottom: 10 }}>
           {images.map((img, index) => (
             <View key={index} style={styles.imageWrap}>
               <Image source={{ uri: img.uri }} style={styles.image} />
@@ -416,22 +413,36 @@ export default function EditProductScreen() {
         {metaFields.map((field) => (
           <View key={field} style={{ marginBottom: 10 }}>
             <Text style={styles.metaLabel}>{field}</Text>
-            <TextInput
-              style={styles.input}
-              value={
-                Array.isArray(form.meta?.[field])
-                  ? form.meta[field].join(", ")
-                  : form.meta?.[field] || ""
-              }
-              onChangeText={(text) =>
-                handleMetaChange(
-                  field,
-                  text.includes(",")
-                    ? text.split(",").map((s) => s.trim())
-                    : text.trim()
-                )
-              }
-            />
+            {field === "Delivery Options" ? (
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={form.meta?.[field] || deliveryOptions[0]}
+                  onValueChange={(value) => handleMetaChange(field, value)}
+                  style={{ height: 45 }}
+                >
+                  {deliveryOptions.map((opt) => (
+                    <Picker.Item key={opt} label={opt} value={opt} />
+                  ))}
+                </Picker>
+              </View>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={
+                  Array.isArray(form.meta?.[field])
+                    ? form.meta[field].join(", ")
+                    : form.meta?.[field] || ""
+                }
+                onChangeText={(text) =>
+                  handleMetaChange(
+                    field,
+                    text.includes(",")
+                      ? text.split(",").map((s) => s.trim())
+                      : text.trim()
+                  )
+                }
+              />
+            )}
           </View>
         ))}
 
@@ -446,7 +457,7 @@ export default function EditProductScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  container: { padding: 16 },
+  scrollContent: { padding: 16, paddingBottom: 40 },
   header: {
     fontSize: 20,
     fontWeight: "bold",
@@ -487,6 +498,13 @@ const styles = StyleSheet.create({
   },
   imageButtonText: { color: "#fff", fontWeight: "bold" },
   metaLabel: { fontSize: 13, color: "#555", marginBottom: 4 },
+  pickerContainer: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
   saveButton: {
     flexDirection: "row",
     backgroundColor: "#003366",
