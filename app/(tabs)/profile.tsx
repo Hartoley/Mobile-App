@@ -7,6 +7,7 @@ import {
   Image,
   LayoutAnimation,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Switch,
@@ -39,6 +40,7 @@ const Profile = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [storedUser, setStoredUser] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const getStoredUser = async () => {
@@ -69,6 +71,12 @@ const Profile = () => {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUser(); // Reuse your existing fetch function
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     fetchUser();
   }, [storedUser]);
@@ -81,11 +89,13 @@ const Profile = () => {
   const edit = () => {
     router.push("/editProfile");
   };
-
   if (loading) {
     return (
       <View style={styles.centered}>
-        <Text>Loading profile...</Text>
+        <View style={styles.skeletonAvatar} />
+        <View style={styles.skeletonLine} />
+        <View style={styles.skeletonLine} />
+        <View style={styles.skeletonLine} />
       </View>
     );
   }
@@ -130,6 +140,9 @@ const Profile = () => {
         style={styles.scrollContainer}
         contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <View style={{ marginTop: 200 }}>
           <View style={styles.nameContainer}>
@@ -269,6 +282,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgb(215,223,243)",
   },
   refreshButton: {
     marginTop: 20,
@@ -312,6 +326,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  skeletonAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#ddd",
+    marginBottom: 20,
+  },
+  skeletonLine: {
+    width: "80%",
+    height: 20,
+    backgroundColor: "#ddd",
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+
   name: {
     fontWeight: "700",
     fontSize: 16,
