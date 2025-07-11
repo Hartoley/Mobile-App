@@ -321,7 +321,7 @@ export default function EditProductScreen() {
     const formData = new FormData();
     setLoadingForm(true);
 
-    // 👇 Exclude 'meta', 'sku', and 'createdBy'
+    // Append regular form fields
     for (let key in form) {
       if (
         key !== "meta" &&
@@ -334,19 +334,28 @@ export default function EditProductScreen() {
       }
     }
 
-    // Meta
+    // Append meta as JSON string
     formData.append("meta", JSON.stringify(form.meta));
 
-    // Thumbnail (only if changed)
+    // Append thumbnail only if changed
     if (thumbnail?.uri && !thumbnail.uri.startsWith("http")) {
       formData.append("thumbnail", {
-        uri: thumbnail.uri,
+        uri: thumbnail.uri.startsWith("file://")
+          ? thumbnail.uri
+          : `file://${thumbnail.uri}`,
         type: "image/jpeg",
         name: "thumbnail.jpg",
       });
     }
 
-    // Gallery images (only local ones)
+    // ✨ Append URLs of kept remote images
+    const existingImageUrls = images
+      .filter((img) => img.uri.startsWith("http"))
+      .map((img) => img.uri);
+
+    formData.append("existingImages", JSON.stringify(existingImageUrls));
+
+    // ✨ Append newly added local images
     images.forEach((img, i) => {
       if (!img.uri.startsWith("http")) {
         console.log("Adding image:", img.uri);
