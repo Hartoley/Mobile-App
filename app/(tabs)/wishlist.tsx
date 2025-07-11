@@ -1,9 +1,9 @@
 import { useAuth } from "@/lib/autht-context";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-
 import {
   FlatList,
   Image,
@@ -13,33 +13,52 @@ import {
   View,
 } from "react-native";
 
-const streaks = () => {
+const Streaks = () => {
   const { signOut } = useAuth();
   const router = useRouter();
   const navigation = useNavigation();
 
-  const [products, setProducts] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchProducts = () => {
-    return fetch("https://dummyjson.com/products")
-      .then((res) => res.json())
-      .then((data) => {
-        const shuffled = [...data.products].sort(() => 0.5 - Math.random());
-        setProducts(shuffled);
-      })
-      .catch((error) => console.error("Error fetching products:", error));
+  const fetchWishlist = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem("QurioUser");
+      if (!storedUser) {
+        console.error("No user ID found in storage");
+        return;
+      }
+
+      const response = await fetch(
+        `https://qurioans.onrender.com/qurioans/getwishlist/${storedUser}`
+      );
+      const data = await response.json();
+
+      if (data.wishlist && data.wishlist.products) {
+        const formatted = data.wishlist.products.map((item) => ({
+          id: item._id,
+          title: item.title,
+          price: item.price,
+          thumbnail: item.thumbnail,
+          rating: item.rating || 0, // fallback if rating missing
+        }));
+        setWishlistItems(formatted);
+      }
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchProducts().finally(() => setLoading(false));
+    fetchWishlist();
   }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
-    setProducts([]);
-    fetchProducts().finally(() => setRefreshing(false));
+    fetchWishlist().finally(() => setRefreshing(false));
   };
 
   const renderItem = ({ item }) => (
@@ -47,9 +66,13 @@ const streaks = () => {
       style={styles.card}
       onPress={() => router.push(`/product/${item.id}`)}
     >
-      <Image source={{ uri: item.thumbnail }} style={styles.image} />
+      <Image
+        className="w-full"
+        source={{ uri: item.thumbnail }}
+        style={styles.image}
+      />
       <TouchableOpacity style={styles.heart}>
-        <AntDesign name="hearto" size={16} color="#f55" />
+        <AntDesign name="heart" size={16} color="#f55" />
       </TouchableOpacity>
       <Text style={styles.title} numberOfLines={1}>
         {item.title}
@@ -106,14 +129,12 @@ const streaks = () => {
         style={{
           backgroundColor: "rgb(0,20,77)",
           height: "15%",
-          alignContent: "center",
           justifyContent: "center",
           paddingVertical: 16,
           alignItems: "center",
           paddingTop: 40,
           borderBottomLeftRadius: 20,
           borderBottomRightRadius: 20,
-          overflow: "hidden",
           flexDirection: "row",
           gap: 5,
         }}
@@ -126,15 +147,17 @@ const streaks = () => {
         </TouchableOpacity>
         <View className="items-center gap-3 w-[50%] flex-row h-full">
           <Ionicons name="heart" size={18} color="red" />
-
           <Text style={{ fontSize: 16, fontWeight: "bold", color: "white" }}>
             My Wishlist
           </Text>
         </View>
       </View>
+
       <View style={styles.container}>
         <FlatList
-          data={loading || refreshing ? Array.from({ length: 6 }) : products}
+          data={
+            loading || refreshing ? Array.from({ length: 6 }) : wishlistItems
+          }
           renderItem={loading || refreshing ? renderPlaceholder : renderItem}
           keyExtractor={(item, index) =>
             loading || refreshing ? index.toString() : item.id.toString()
@@ -144,13 +167,20 @@ const streaks = () => {
           columnWrapperStyle={{ justifyContent: "space-between" }}
           refreshing={refreshing}
           onRefresh={onRefresh}
+          ListEmptyComponent={
+            !loading && (
+              <Text style={{ textAlign: "center", marginTop: 20 }}>
+                Your wishlist is empty.
+              </Text>
+            )
+          }
         />
       </View>
     </View>
   );
 };
 
-export default streaks;
+export default Streaks;
 
 const styles = StyleSheet.create({
   container: {
