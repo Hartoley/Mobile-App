@@ -5,6 +5,7 @@ import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   ActivityIndicator,
   Alert,
@@ -244,6 +245,18 @@ const ProductUploadScreen = ({}) => {
   const navigation = useNavigation();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerIndex, setDatePickerIndex] = useState(null);
+  const [storedUser, setStoredUser] = useState("");
+
+  useEffect(() => {
+    const fetchStoredUser = async () => {
+      const userId = await AsyncStorage.getItem("QurioUser");
+      if (userId) {
+        setStoredUser(userId);
+      }
+    };
+
+    fetchStoredUser();
+  }, []);
 
   const updateMetaField = (index, value) => {
     const updated = [...meta];
@@ -330,7 +343,7 @@ const ProductUploadScreen = ({}) => {
       formData.append("description", description);
       formData.append("price", price);
       formData.append("category", category);
-      formData.append("createdBy", "68460be2acf270418acdf715");
+      formData.append("createdBy", storedUser);
 
       if (thumbnail) {
         formData.append("thumbnail", {

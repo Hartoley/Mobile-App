@@ -1,4 +1,5 @@
 import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -217,12 +218,14 @@ export default function ProductDetail() {
   const route = useRoute();
   const navigation = useNavigation();
   const { id } = route.params;
-
   const [product, setProduct] = useState(null);
   const [showMore, setShowMore] = useState(false);
   const [reviewModal, setReviewModal] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef();
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
 
   useEffect(() => {
     fetch(`https://qurioans.onrender.com/mobile/product/${id}`)
@@ -230,6 +233,158 @@ export default function ProductDetail() {
       .then((res) => setProduct(res.product))
       .catch(console.error);
   }, [id]);
+
+  const [storedUser, setStoredUser] = useState("");
+
+  useEffect(() => {
+    const fetchStoredUser = async () => {
+      const userId = await AsyncStorage.getItem("QurioUser");
+      if (userId) {
+        setStoredUser(userId);
+      }
+    };
+
+    fetchStoredUser();
+  }, []);
+
+  useEffect(() => {
+    if (product) {
+      checkIfInCart();
+      checkIfInWishlist();
+    }
+  }, [product]);
+
+  const checkIfInWishlist = async () => {
+    try {
+      const userId = storedUser;
+
+      const response = await fetch(
+        `https://qurioans.onrender.com/qurioans/getwishlist/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const text = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Failed to parse JSON:", error);
+        return;
+      }
+
+      if (!data.wishlist || !data.wishlist.products) {
+        console.log("No wishlist found in response");
+        setIsInWishlist(false);
+        return;
+      }
+
+      const found = data.wishlist.products.find(
+        (product) => product._id === id
+      );
+
+      setIsInWishlist(!!found);
+    } catch (error) {
+      console.error("Error checking wishlist:", error);
+    }
+  };
+
+  const checkIfInCart = async () => {
+    try {
+      const userId = storedUser;
+
+      const response = await fetch(
+        `https://qurioans.onrender.com/qurioans/getcart/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const text = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Failed to parse JSON:", error);
+        return;
+      }
+
+      if (!data.cart) {
+        console.log("No cart found in response");
+        setIsInCart(false);
+        return;
+      }
+
+      const found = data.cart.items.find((item) => item.product._id === id);
+
+      setIsInCart(!!found);
+
+      setIsInCart(!!found);
+    } catch (error) {
+      console.error("Error checking cart:", error);
+    }
+  };
+
+  const toggleWishlist = async () => {
+    console.log("I'm clicked");
+
+    try {
+      const userId = storedUser;
+
+      const response = await fetch(
+        `https://qurioans.onrender.com/qurioans/togglewishlist/${userId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ productId: product._id }),
+        }
+      );
+
+      const data = await response.json();
+      // console.log(data.message);
+      checkIfInWishlist();
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+    }
+  };
+
+  const addToCart = async () => {
+    try {
+      setAddingToCart(true);
+
+      const userId = storedUser; // replace with your auth userId
+
+      const response = await fetch(
+        `https://qurioans.onrender.com/qurioans/update-cart/${userId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productId: id,
+            quantity: 1,
+            action: "add",
+          }),
+        }
+      );
+
+      const data = await response.json();
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   const handleScroll = (event) => {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -286,11 +441,14 @@ export default function ProductDetail() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="arrowleft" size={24} color="rgb(0,28,105)" />
-        </TouchableOpacity>
         <Text style={styles.headerText}>STYLLA FASHION</Text>
-        <AntDesign name="hearto" size={20} color="#f44" />
+        <TouchableOpacity onPress={toggleWishlist}>
+          <AntDesign
+            name={isInWishlist ? "heart" : "hearto"}
+            size={20}
+            color="#f44"
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Image Carousel */}
@@ -420,8 +578,18 @@ export default function ProductDetail() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Add to Cart</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={addToCart}
+          disabled={addingToCart}
+        >
+          {isInCart ? (
+            <Text style={styles.buttonText}>Added to cart</Text>
+          ) : (
+            <Text style={styles.buttonText}>
+              {addingToCart ? "Adding..." : "Add to Cart"}
+            </Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
 
