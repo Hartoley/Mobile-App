@@ -229,7 +229,7 @@ export default function EditProductScreen() {
   const route = useRoute();
   const { id } = route.params;
   const router = useRouter();
-
+  const [showScrollRight, setShowScrollRight] = useState(false);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({});
   const [images, setImages] = useState([]);
@@ -426,6 +426,15 @@ export default function EditProductScreen() {
               paddingHorizontal: 10,
               alignItems: "center",
             }}
+            onScroll={(e) => {
+              const { contentOffset, layoutMeasurement, contentSize } =
+                e.nativeEvent;
+              const isScrolledToEnd =
+                contentOffset.x + layoutMeasurement.width >=
+                contentSize.width - 10;
+              setShowScrollRight(!isScrolledToEnd);
+            }}
+            scrollEventThrottle={16}
           >
             {images.map((img, index) => (
               <View key={index} style={styles.imageWrap}>
@@ -440,22 +449,15 @@ export default function EditProductScreen() {
             ))}
           </ScrollView>
 
-          {/* 👇 Scroll hint icon */}
-          <Ionicons
-            name="chevron-forward"
-            size={24}
-            color="#777"
-            style={{
-              position: "absolute",
-              right: 5,
-              top: "40%",
-              zIndex: 10,
-              backgroundColor: "#d7dff3",
-              borderRadius: 12,
-              padding: 2,
-            }}
-            pointerEvents="none"
-          />
+          {showScrollRight && (
+            <Ionicons
+              name="chevron-forward"
+              size={24}
+              color="#003366"
+              style={styles.scrollIcon}
+              pointerEvents="none"
+            />
+          )}
         </View>
 
         <TouchableOpacity onPress={pickNewImage} style={styles.imageButton}>
@@ -591,4 +593,18 @@ const styles = StyleSheet.create({
   },
 
   saveText: { color: "#fff", marginLeft: 8, fontWeight: "600", fontSize: 15 },
+  scrollIcon: {
+    position: "absolute",
+    right: 6,
+    top: 40,
+    zIndex: 10,
+    backgroundColor: "#d7dff3",
+    borderRadius: 12,
+    padding: 2,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+  },
 });
