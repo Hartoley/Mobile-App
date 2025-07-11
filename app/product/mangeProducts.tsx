@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,6 +18,12 @@ export default function ManageProducts() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchProducts().finally(() => setRefreshing(false));
+  };
 
   const fetchProducts = async () => {
     try {
@@ -51,7 +58,6 @@ export default function ManageProducts() {
       </View>
     </TouchableOpacity>
   );
-
   return (
     <View className="h-full w-full bg-[rgb(215,223,243)]">
       <YouTubeHeader />
@@ -75,6 +81,9 @@ export default function ManageProducts() {
             keyExtractor={(item) => item._id}
             renderItem={renderItem}
             contentContainerStyle={{ paddingBottom: 40 }}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
           />
         )}
       </View>

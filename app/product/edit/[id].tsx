@@ -15,6 +15,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
@@ -234,6 +235,13 @@ export default function EditProductScreen() {
   const [form, setForm] = useState({});
   const [images, setImages] = useState([]);
   const [thumbnail, setThumbnail] = useState(null);
+  const [loadingForm, setLoadingForm] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchProduct().finally(() => setRefreshing(false));
+  };
 
   useEffect(() => {
     fetchProduct();
@@ -272,7 +280,6 @@ export default function EditProductScreen() {
   const handleMetaChange = (key, value) => {
     setForm({ ...form, meta: { ...form.meta, [key]: value } });
   };
-
   const removeImage = (index) => {
     const updated = [...images];
     updated.splice(index, 1);
@@ -303,11 +310,25 @@ export default function EditProductScreen() {
 
   const handleSave = async () => {
     const formData = new FormData();
+    setLoadingForm(true);
+
+    // 👇 Exclude 'meta', 'sku', and 'createdBy'
     for (let key in form) {
-      if (key !== "meta") formData.append(key, form[key]);
+      if (
+        key !== "meta" &&
+        key !== "sku" &&
+        key !== "createdBy" &&
+        form[key] !== undefined &&
+        form[key] !== "undefined"
+      ) {
+        formData.append(key, form[key]);
+      }
     }
+
+    // Meta
     formData.append("meta", JSON.stringify(form.meta));
 
+    // Thumbnail (only if changed)
     if (thumbnail?.uri && !thumbnail.uri.startsWith("http")) {
       formData.append("thumbnail", {
         uri: thumbnail.uri,
@@ -316,6 +337,7 @@ export default function EditProductScreen() {
       });
     }
 
+    // Gallery images (only local ones)
     images.forEach((img, i) => {
       if (!img.uri.startsWith("http")) {
         formData.append("images", {
@@ -328,17 +350,21 @@ export default function EditProductScreen() {
 
     try {
       await axios.put(
-        `https://qurioans.onrender.com/mobile/product/${id}`,
+        `https://qurioans.onrender.com/mobile/editproduct/${id}`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
       Alert.alert("Success", "Product updated successfully!");
       router.back();
     } catch (err) {
-      console.log(err.response?.data || err);
+      console.log("Full Axios Error:", err.response?.data || err);
       Alert.alert("Failed", "Could not update product.");
+    } finally {
+      setLoadingForm(false);
     }
   };
 
@@ -445,10 +471,18 @@ export default function EditProductScreen() {
             )}
           </View>
         ))}
-
-        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-          <Ionicons name="save-outline" size={20} color="#fff" />
-          <Text style={styles.saveText}>Save Changes</Text>
+        <TouchableOpacity style={styles.saveButton}>
+          {loadingForm ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <TouchableOpacity
+              onPress={handleSave}
+              className="w-full h-full flex-row justify-center items-center "
+            >
+              <Ionicons name="save-outline" size={20} color="#fff" />
+              <Text style={styles.saveText}>Save Changes</Text>
+            </TouchableOpacity>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -508,11 +542,13 @@ const styles = StyleSheet.create({
   saveButton: {
     flexDirection: "row",
     backgroundColor: "#003366",
-    padding: 14,
+    height: 50,
+
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
+    marginBottom: 30,
   },
   saveText: { color: "#fff", marginLeft: 8, fontWeight: "600", fontSize: 15 },
 });
