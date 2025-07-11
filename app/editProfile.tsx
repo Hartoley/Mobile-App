@@ -1,8 +1,11 @@
 import { useAuth } from "@/lib/autht-context";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Image,
   LayoutAnimation,
   Platform,
   ScrollView,
@@ -23,16 +26,23 @@ if (
 }
 
 const EditProfile = () => {
-  const [form, setForm] = useState({
-    name: "Sakeena Zayn",
-    email: "sakeena@example.com",
-    phone: "+123 456 7890",
-    address: "123 Main Street, New York, USA",
-    card: "Visa **** 5432",
-    language: "English",
-  });
   const { signOut } = useAuth();
-  const [loadingLogout, setLoadingLogout] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [loadingSave, setLoadingSave] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [avatar, setAvatar] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+
+  const [form, setForm] = useState({
+    userName: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
+    card: "",
+    language: "",
+  });
 
   const [settings, setSettings] = useState({
     notifications: true,
@@ -45,53 +55,198 @@ const EditProfile = () => {
     support: false,
   });
 
-  const toggleSection = (key: keyof typeof sections) => {
+  const toggleSection = (key) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleChange = (key: string, value: string) => {
+  const handleChange = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    console.log("Updated Profile:", form, settings);
+  const fetchUser = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem("QurioUser");
+      if (!storedUser) throw new Error("User ID not found");
+      setUserId(storedUser);
+
+      const response = await fetch(
+        `https://qurioans.onrender.com/qurioans/getuser/${storedUser}`
+      );
+      const data = await response.json();
+      console.log("Fetch data", data);
+
+      if (response.ok && data.data) {
+        const user = data.data;
+        setForm({
+          userName: user.userName || "",
+          firstName: user.firstName || "",
+          lastName: user.lastName || "",
+          email: user.email || "",
+          phoneNumber: user.phoneNumber || "",
+          address: user.address || "",
+          card: user.card || "",
+          language: user.language || "",
+        });
+        setSettings({
+          notifications: user.notificationPreferences?.push || false,
+        });
+        if (user.avatarUrl) {
+          setAvatar({ uri: user.avatarUrl });
+        }
+      } else {
+        console.error("Fetch user error:", data);
+        alert("Failed to load user data.");
+      }
+    } catch (error) {
+      console.error("Fetch user failed:", error);
+    } finally {
+      setLoadingUser(false);
+    }
   };
 
-  const handleLogout = () => {
-    console.log("Logging out...");
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const pickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission denied!");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: [ImagePicker.MediaType.IMAGE],
+      quality: 0.5,
+    });
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      setAvatar({ uri: asset.uri });
+      setAvatarFile(asset);
+    }
   };
+
+  const handleSave = async () => {
+    if (!userId) return;
+    setLoadingSave(true);
+    try {
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+      formData.append(
+        "notificationPreferences",
+        JSON.stringify({ push: settings.notifications })
+      );
+
+      if (avatarFile) {
+        formData.append("avatarUrl", {
+          uri: avatarFile.uri,
+          type: "image/jpeg",
+          name: "avatar.jpg",
+        });
+      }
+
+      const response = await fetch(
+        `https://qurioans.onrender.com/qurioans/update-profile/${userId}`,
+        {
+          method: "PUT",
+          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        alert("Profile updated successfully.");
+        fetchUser();
+      } else {
+        console.error("Update failed:", data);
+        alert("Update failed");
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("An error occurred.");
+    } finally {
+      setLoadingSave(false);
+    }
+  };
+
+  if (loadingUser) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="rgb(0,20,77)" />
+      </View>
+    );
+  }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "rgb(215,223,243)",
-        paddingBottom: 50,
-      }}
-    >
+    <View style={{ flex: 1, backgroundColor: "rgb(215,223,243)" }}>
       {/* Header */}
       <View style={styles.header}>
         <Ionicons name="settings" size={18} color="white" />
         <Text style={styles.headerText}>Edit Profile</Text>
       </View>
 
-      {/* Sections */}
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ padding: 20 }}
       >
+        {/* Avatar */}
+        <TouchableOpacity onPress={pickAvatar}>
+          {avatar ? (
+            <Image
+              source={avatar}
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                alignSelf: "center",
+                marginBottom: 20,
+              }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: "#ccc",
+                alignSelf: "center",
+                marginBottom: 20,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text>Select Photo</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
         {/* PERSONAL INFO */}
         <Section
           title="Personal Info"
           expanded={sections.personal}
           onToggle={() => toggleSection("personal")}
         >
-          <Label text="Full Name" />
+          <Label text="Username" />
           <TextInput
             style={styles.input}
-            value={form.name}
-            onChangeText={(text) => handleChange("name", text)}
+            value={form.userName}
+            onChangeText={(text) => handleChange("userName", text)}
+          />
+          <Label text="First Name" />
+          <TextInput
+            style={styles.input}
+            value={form.firstName}
+            onChangeText={(text) => handleChange("firstName", text)}
+          />
+          <Label text="Last Name" />
+          <TextInput
+            style={styles.input}
+            value={form.lastName}
+            onChangeText={(text) => handleChange("lastName", text)}
           />
           <Label text="Email" />
           <TextInput
@@ -103,8 +258,8 @@ const EditProfile = () => {
           <Label text="Phone" />
           <TextInput
             style={styles.input}
-            value={form.phone}
-            onChangeText={(text) => handleChange("phone", text)}
+            value={form.phoneNumber}
+            onChangeText={(text) => handleChange("phoneNumber", text)}
             keyboardType="phone-pad"
           />
           <Label text="Address" />
@@ -159,68 +314,46 @@ const EditProfile = () => {
           />
         </Section>
 
-        {/* SUPPORT */}
-        <Section
-          title="Support & Info"
-          expanded={sections.support}
-          onToggle={() => toggleSection("support")}
-        >
-          <Text style={styles.staticOption}>Help Center</Text>
-          <Text style={styles.staticOption}>Return Policy - 30 days</Text>
-        </Section>
-
         {/* SAVE BUTTON */}
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveText}>Save Changes</Text>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={loadingSave}
+        >
+          <Text style={styles.saveText}>
+            {loadingSave ? "Saving..." : "Save Changes"}
+          </Text>
         </TouchableOpacity>
 
-        {/* LOGOUT BUTTON (Always visible) */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={signOut}
-          disabled={loadingLogout}
-        >
-          <Text style={styles.logoutText}>
-            {loadingLogout ? "Logging out..." : "Log Out"}
-          </Text>
+        {/* LOGOUT BUTTON */}
+        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+          <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
 };
 
-// Label Component
-const Label = ({ text }: { text: string }) => (
-  <Text style={styles.label}>{text}</Text>
-);
+const Label = ({ text }) => <Text style={styles.label}>{text}</Text>;
 
-// Expandable Section
-const Section = ({
-  title,
-  expanded,
-  onToggle,
-  children,
-}: {
-  title: string;
-  expanded: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) => {
-  return (
-    <View style={{ marginBottom: 20 }}>
-      <TouchableOpacity onPress={onToggle} style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <Text style={{ fontSize: 16 }}>{expanded ? "−" : "+"}</Text>
-      </TouchableOpacity>
-      {expanded && <View style={{ paddingTop: 10 }}>{children}</View>}
-    </View>
-  );
-};
+const Section = ({ title, expanded, onToggle, children }) => (
+  <View style={{ marginBottom: 20 }}>
+    <TouchableOpacity onPress={onToggle} style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={{ fontSize: 16 }}>{expanded ? "−" : "+"}</Text>
+    </TouchableOpacity>
+    {expanded && <View style={{ paddingTop: 10 }}>{children}</View>}
+  </View>
+);
 
 export default EditProfile;
 
-// STYLES
 const styles = StyleSheet.create({
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",
