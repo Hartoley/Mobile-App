@@ -281,20 +281,29 @@ export default function EditProductScreen() {
     setForm({ ...form, meta: { ...form.meta, [key]: value } });
   };
   const removeImage = (index) => {
-    const updated = [...images];
-    updated.splice(index, 1);
-    setImages(updated);
+    if (index >= 0 && index < images.length) {
+      const updated = [...images];
+      updated.splice(index, 1);
+      setImages(updated);
+    }
   };
 
   const pickNewImage = async () => {
-    if (images.length >= 5) return Alert.alert("Limit", "Max 5 images allowed");
+    if (images.length >= 5) {
+      Alert.alert("Limit", "Max 5 images allowed");
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
     });
-    if (!result.canceled) {
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
-      setImages([...images, asset]);
+      if (asset.uri) {
+        setImages([...images, asset]);
+      }
     }
   };
 
@@ -340,8 +349,9 @@ export default function EditProductScreen() {
     // Gallery images (only local ones)
     images.forEach((img, i) => {
       if (!img.uri.startsWith("http")) {
+        console.log("Adding image:", img.uri);
         formData.append("images", {
-          uri: img.uri,
+          uri: img.uri.startsWith("file://") ? img.uri : `file://${img.uri}`,
           type: "image/jpeg",
           name: `img_${i}.jpg`,
         });
@@ -500,17 +510,14 @@ export default function EditProductScreen() {
             )}
           </View>
         ))}
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           {loadingForm ? (
             <ActivityIndicator color="white" />
           ) : (
-            <TouchableOpacity
-              onPress={handleSave}
-              className="w-full h-full flex-row justify-center items-center "
-            >
+            <>
               <Ionicons name="save-outline" size={20} color="#fff" />
               <Text style={styles.saveText}>Save Changes</Text>
-            </TouchableOpacity>
+            </>
           )}
         </TouchableOpacity>
       </ScrollView>
