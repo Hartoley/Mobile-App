@@ -391,12 +391,12 @@ export default function ProductDetail() {
             </Text>
             <Text style={styles.description}>SKU: {product.sku}</Text>
             <Text style={styles.description}>Weight: {product.weight} kg</Text>
-            <Text style={styles.description}>
+            {/* <Text style={styles.description}>
               Dimensions:{" "}
               {product.dimensions
                 ? `${product.dimensions.width} x ${product.dimensions.height} x ${product.dimensions.depth}`
                 : "N/A"}
-            </Text>
+            </Text> */}
             <Text style={styles.description}>
               Warranty: {product.warrantyInformation}
             </Text>
