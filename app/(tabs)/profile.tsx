@@ -2,7 +2,6 @@ import { useAuth } from "@/lib/autht-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-
 import {
   Dimensions,
   Image,
@@ -49,25 +48,28 @@ const Profile = () => {
     getStoredUser();
   }, []);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!storedUser) return;
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `https://qurioans.onrender.com/qurioans/getuser/${storedUser}`
-        );
-        const data = await res.json();
-        if (data.status) {
-          setUser(data.data);
-        }
-      } catch (error) {
-        console.error("Fetch user failed:", error);
-      } finally {
-        setLoading(false);
+  const fetchUser = async () => {
+    if (!storedUser) return;
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://qurioans.onrender.com/qurioans/getuser/${storedUser}`
+      );
+      const data = await res.json();
+      if (data.status) {
+        setUser(data.data);
+      } else {
+        setUser(null);
       }
-    };
+    } catch (error) {
+      console.error("Fetch user failed:", error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUser();
   }, [storedUser]);
 
@@ -82,8 +84,7 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        {/* 🦴 Skeleton loader while fetching */}
+      <View style={styles.centered}>
         <Text>Loading profile...</Text>
       </View>
     );
@@ -91,8 +92,11 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={styles.centered}>
         <Text>No user data found</Text>
+        <TouchableOpacity onPress={fetchUser} style={styles.refreshButton}>
+          <Text style={{ color: "white" }}>Refresh</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -260,8 +264,19 @@ const Section = ({
 export default Profile;
 
 // ========== STYLES ==========
-
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  refreshButton: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#4c1d95",
+    borderRadius: 5,
+  },
   fixedTop: {
     position: "absolute",
     top: 0,

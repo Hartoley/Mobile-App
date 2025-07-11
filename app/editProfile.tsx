@@ -4,7 +4,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   LayoutAnimation,
   Platform,
@@ -109,9 +108,7 @@ const EditProfile = () => {
   }, []);
 
   const pickAvatar = async () => {
-    console.log("pickAvatar clicked");
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    console.log("Permission status:", status);
     if (status !== "granted") {
       alert("Permission denied!");
       return;
@@ -121,7 +118,6 @@ const EditProfile = () => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.5,
     });
-    console.log("Picker result:", result);
 
     if (!result.canceled) {
       const asset = result.assets[0];
@@ -180,13 +176,25 @@ const EditProfile = () => {
   if (loadingUser) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" color="rgb(0,20,77)" />
+        <View style={styles.skeletonAvatar} />
+        <View style={styles.skeletonInput} />
+        <View style={styles.skeletonInput} />
+        <View style={styles.skeletonInput} />
+        <View style={styles.skeletonInput} />
+        <View style={styles.skeletonInput} />
+        <View style={styles.skeletonInput} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "rgb(215,223,243)" }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "rgb(215,223,243)",
+        paddingBottom: 40,
+      }}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Ionicons name="settings" size={18} color="white" />
@@ -195,34 +203,14 @@ const EditProfile = () => {
 
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ padding: 20 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
       >
         {/* Avatar */}
         <TouchableOpacity onPress={pickAvatar}>
           {avatar ? (
-            <Image
-              source={avatar}
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                alignSelf: "center",
-                marginBottom: 20,
-              }}
-            />
+            <Image source={avatar} style={styles.avatar} />
           ) : (
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: "#ccc",
-                alignSelf: "center",
-                marginBottom: 20,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
+            <View style={styles.avatarPlaceholder}>
               <Text>Select Photo</Text>
             </View>
           )}
@@ -234,45 +222,7 @@ const EditProfile = () => {
           expanded={sections.personal}
           onToggle={() => toggleSection("personal")}
         >
-          <Label text="Username" />
-          <TextInput
-            style={styles.input}
-            value={form.userName}
-            onChangeText={(text) => handleChange("userName", text)}
-          />
-          <Label text="First Name" />
-          <TextInput
-            style={styles.input}
-            value={form.firstName}
-            onChangeText={(text) => handleChange("firstName", text)}
-          />
-          <Label text="Last Name" />
-          <TextInput
-            style={styles.input}
-            value={form.lastName}
-            onChangeText={(text) => handleChange("lastName", text)}
-          />
-          <Label text="Email" />
-          <TextInput
-            style={styles.input}
-            value={form.email}
-            onChangeText={(text) => handleChange("email", text)}
-            keyboardType="email-address"
-          />
-          <Label text="Phone" />
-          <TextInput
-            style={styles.input}
-            value={form.phoneNumber}
-            onChangeText={(text) => handleChange("phoneNumber", text)}
-            keyboardType="phone-pad"
-          />
-          <Label text="Address" />
-          <TextInput
-            style={[styles.input, { height: 80 }]}
-            value={form.address}
-            multiline
-            onChangeText={(text) => handleChange("address", text)}
-          />
+          <FormInputs form={form} handleChange={handleChange} />
         </Section>
 
         {/* PAYMENT INFO */}
@@ -338,6 +288,50 @@ const EditProfile = () => {
   );
 };
 
+const FormInputs = ({ form, handleChange }) => (
+  <>
+    <Label text="Username" />
+    <TextInput
+      style={styles.input}
+      value={form.userName}
+      onChangeText={(text) => handleChange("userName", text)}
+    />
+    <Label text="First Name" />
+    <TextInput
+      style={styles.input}
+      value={form.firstName}
+      onChangeText={(text) => handleChange("firstName", text)}
+    />
+    <Label text="Last Name" />
+    <TextInput
+      style={styles.input}
+      value={form.lastName}
+      onChangeText={(text) => handleChange("lastName", text)}
+    />
+    <Label text="Email" />
+    <TextInput
+      style={styles.input}
+      value={form.email}
+      onChangeText={(text) => handleChange("email", text)}
+      keyboardType="email-address"
+    />
+    <Label text="Phone" />
+    <TextInput
+      style={styles.input}
+      value={form.phoneNumber}
+      onChangeText={(text) => handleChange("phoneNumber", text)}
+      keyboardType="phone-pad"
+    />
+    <Label text="Address" />
+    <TextInput
+      style={[styles.input, { height: 80 }]}
+      value={form.address}
+      multiline
+      onChangeText={(text) => handleChange("address", text)}
+    />
+  </>
+);
+
 const Label = ({ text }) => <Text style={styles.label}>{text}</Text>;
 
 const Section = ({ title, expanded, onToggle, children }) => (
@@ -357,11 +351,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 30,
+  },
+  skeletonAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#ddd",
+    marginBottom: 20,
+  },
+  skeletonInput: {
+    width: "100%",
+    height: 45,
+    backgroundColor: "#ddd",
+    borderRadius: 10,
+    marginBottom: 16,
   },
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",
-    paddingBottom: 10,
   },
   header: {
     backgroundColor: "rgb(0,20,77)",
@@ -378,6 +386,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "white",
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#ccc",
+    alignSelf: "center",
+    marginBottom: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   label: {
     fontSize: 13,
@@ -420,13 +445,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "rgb(0,20,77)",
-  },
-  staticOption: {
-    fontSize: 13,
-    paddingVertical: 8,
-    borderBottomWidth: 0.5,
-    borderColor: "#ccc",
-    color: "#222",
   },
   saveButton: {
     backgroundColor: "rgb(0,20,77)",

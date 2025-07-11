@@ -43,6 +43,7 @@ const CartScreen = () => {
         }
       );
       const data = await response.json();
+      console.log(data);
 
       if (data.cart && data.cart.items) {
         const formatted = data.cart.items.map((item) => ({
