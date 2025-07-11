@@ -20,7 +20,7 @@ export default function SellerDashboard() {
   };
 
   const Manage = () => {
-    router.push("/product/manageProducts");
+    router.push("/product/mangeProducts");
   };
 
   return (

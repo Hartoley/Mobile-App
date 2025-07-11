@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import YouTubeHeader from "../header";
 
 export default function ManageProducts() {
   const router = useRouter();
@@ -20,9 +21,9 @@ export default function ManageProducts() {
   const fetchProducts = async () => {
     try {
       const res = await axios.get(
-        "https://qurioans.onrender.com/mobile/products"
+        "https://qurioans.onrender.com/mobile/products?page=1&limit=20"
       );
-      setProducts(res.data);
+      setProducts(res.data.products);
     } catch (error) {
       console.error("Error loading products:", error);
     } finally {
@@ -39,7 +40,7 @@ export default function ManageProducts() {
       style={styles.card}
       onPress={() => router.push(`/product/edit/${item._id}`)}
     >
-      <Image source={{ uri: item.thumbnail?.url }} style={styles.image} />
+      <Image source={{ uri: item.thumbnail }} style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.price}>₦{item.price}</Text>
@@ -52,18 +53,31 @@ export default function ManageProducts() {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Manage Your Products</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#003366" />
-      ) : (
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item._id}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 40 }}
-        />
-      )}
+    <View className="h-full w-full bg-[rgb(215,223,243)]">
+      <YouTubeHeader />
+      <View style={styles.container}>
+        <Text style={styles.header} className="text-center">
+          Manage Your Products
+        </Text>
+
+        {loading ? (
+          <View style={styles.loaderWrapper}>
+            <ActivityIndicator size="large" color="#003366" />
+          </View>
+        ) : products.length === 0 ? (
+          <View style={styles.emptyWrapper}>
+            <Ionicons name="cube-outline" size={50} color="#003366" />
+            <Text style={styles.emptyText}>No products found</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={products}
+            keyExtractor={(item) => item._id}
+            renderItem={renderItem}
+            contentContainerStyle={{ paddingBottom: 40 }}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -87,10 +101,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     elevation: 2,
     overflow: "hidden",
+    gap: 5,
+    paddingHorizontal: 5,
   },
   image: {
     width: 80,
     height: 80,
+    alignSelf: "center",
+    borderRadius: 5,
   },
   info: {
     flex: 1,
@@ -115,5 +133,21 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     color: "#003366",
     fontSize: 13,
+  },
+  loaderWrapper: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyWrapper: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+  },
+  emptyText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#555",
   },
 });
