@@ -15,6 +15,204 @@ import {
 
 const { width } = Dimensions.get("window");
 
+const categoryMetaFields = {
+  All: [
+    "Brand",
+    "Condition",
+    "Location",
+    "Seller Type",
+    "Warranty",
+    "Delivery Options",
+  ],
+  Electronics: [
+    "Brand",
+    "Model",
+    "Warranty",
+    "Condition",
+    "Features",
+    "Delivery Options",
+  ],
+  Books: [
+    "Author",
+    "Publisher",
+    "ISBN",
+    "Edition",
+    "Condition",
+    "Language",
+    "Delivery Options",
+  ],
+  Clothing: [
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Condition",
+    "Fit Type",
+    "Delivery Options",
+  ],
+  Food: [
+    "Brand",
+    "Ingredients",
+    "Expiry Date",
+    "Weight",
+    "Packaging Type",
+    "Dietary Info",
+    "Delivery Options",
+  ],
+  Hostel: [
+    "Name",
+    "Type",
+    "Number of Beds",
+    "Facilities",
+    "Location",
+    "Availability",
+  ],
+  Transport: ["Type", "Brand", "Model", "Year", "Condition", "Mileage"],
+  Used: [
+    "Category",
+    "Brand",
+    "Condition",
+    "Usage Duration",
+    "Reason for Selling",
+    "Warranty",
+  ],
+  Freelance: [
+    "Service Type",
+    "Experience",
+    "Delivery Time",
+    "Revision Policy",
+    "Pricing Model",
+    "Availability",
+  ],
+  Bags: [
+    "Brand",
+    "Material",
+    "Type",
+    "Color",
+    "Condition",
+    "Size",
+    "Delivery Options",
+  ],
+  Shoes: [
+    "Brand",
+    "Size",
+    "Material",
+    "Color",
+    "Condition",
+    "Style",
+    "Delivery Options",
+  ],
+  Watch: [
+    "Brand",
+    "Model",
+    "Warranty",
+    "Condition",
+    "Features",
+    "Water Resistance",
+    "Delivery Options",
+  ],
+  New: ["Brand", "Model", "Warranty", "Features", "Color", "Availability"],
+  Men: [
+    "Category",
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Condition",
+    "Delivery Options",
+  ],
+  Women: [
+    "Category",
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Condition",
+    "Delivery Options",
+  ],
+  Beauty: [
+    "Brand",
+    "Type",
+    "Expiry Date",
+    "Ingredients",
+    "Skin Type",
+    "Packaging",
+    "Delivery Options",
+  ],
+  Fashion: [
+    "Category",
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Style",
+    "Delivery Options",
+  ],
+  Health: [
+    "Brand",
+    "Type",
+    "Expiry Date",
+    "Ingredients",
+    "Dosage",
+    "Packaging",
+    "Delivery Options",
+  ],
+  Home: [
+    "Category",
+    "Brand",
+    "Material",
+    "Color",
+    "Dimensions",
+    "Condition",
+    "Delivery Options",
+  ],
+  Lifestyle: [
+    "Category",
+    "Type",
+    "Brand",
+    "Material",
+    "Features",
+    "Condition",
+    "Delivery Options",
+  ],
+  Sports: [
+    "Type",
+    "Brand",
+    "Size",
+    "Condition",
+    "Material",
+    "Usage",
+    "Delivery Options",
+  ],
+  Kids: [
+    "Category",
+    "Brand",
+    "Age Range",
+    "Size",
+    "Color",
+    "Condition",
+    "Delivery Options",
+  ],
+  Pets: [
+    "Type",
+    "Brand",
+    "Expiry Date",
+    "Ingredients",
+    "Weight",
+    "Packaging",
+    "Delivery Options",
+  ],
+  Others: [
+    "Category",
+    "Brand",
+    "Condition",
+    "Details",
+    "Availability",
+    "Location",
+    "Delivery Options",
+  ],
+};
+
 export default function ProductDetail() {
   const route = useRoute();
   const navigation = useNavigation();
@@ -36,6 +234,50 @@ export default function ProductDetail() {
   const handleScroll = (event) => {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
     setActiveIndex(slide);
+  };
+
+  const renderMeta = () => {
+    if (!product.meta || !product.category) return null;
+
+    const allowed =
+      categoryMetaFields[product.category] || categoryMetaFields["All"];
+
+    return (
+      <>
+        {Object.entries(product.meta).map(([key, value], idx) => {
+          if (!allowed.includes(key)) return null;
+
+          if (key.toLowerCase() === "color" && Array.isArray(value)) {
+            return (
+              <View key={idx} style={{ marginTop: 6 }}>
+                <Text style={styles.description}>Color:</Text>
+                <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
+                  {value.map((clr, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: clr,
+                        borderWidth: 1,
+                        borderColor: "#ccc",
+                      }}
+                    />
+                  ))}
+                </View>
+              </View>
+            );
+          }
+
+          return (
+            <Text key={idx} style={styles.description}>
+              {key}: {Array.isArray(value) ? value.join(", ") : value}
+            </Text>
+          );
+        })}
+      </>
+    );
   };
 
   if (!product) return <Text style={{ padding: 20 }}>Loading...</Text>;
@@ -102,14 +344,7 @@ export default function ProductDetail() {
         </View>
 
         {/* Seller Info */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingVertical: 12,
-          }}
-        >
+        <View style={styles.sellerRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Image
               source={{
@@ -144,7 +379,6 @@ export default function ProductDetail() {
           </TouchableOpacity>
         </View>
 
-        {/* Description */}
         <Text style={styles.description}>{product.description}</Text>
 
         {showMore && (
@@ -158,8 +392,10 @@ export default function ProductDetail() {
             <Text style={styles.description}>SKU: {product.sku}</Text>
             <Text style={styles.description}>Weight: {product.weight} kg</Text>
             <Text style={styles.description}>
-              Dimensions: {product.dimensions?.width} x{" "}
-              {product.dimensions?.height} x {product.dimensions?.depth}
+              Dimensions:{" "}
+              {product.dimensions
+                ? `${product.dimensions.width} x ${product.dimensions.height} x ${product.dimensions.depth}`
+                : "N/A"}
             </Text>
             <Text style={styles.description}>
               Warranty: {product.warrantyInformation}
@@ -173,6 +409,8 @@ export default function ProductDetail() {
             <Text style={styles.description}>
               Min. Order: {product.minimumOrderQuantity}
             </Text>
+
+            {renderMeta()}
           </>
         )}
 
@@ -182,7 +420,6 @@ export default function ProductDetail() {
           </Text>
         </TouchableOpacity>
 
-        {/* Add to Cart */}
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Add to Cart</Text>
         </TouchableOpacity>
@@ -314,6 +551,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "600",
+  },
+  sellerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
   },
   iconBtn: {
     backgroundColor: "rgb(112,167,245)",
