@@ -34,7 +34,7 @@ const categories = [
   "Others",
 ];
 
-const Category = ({ selected, onChange }) => {
+const Category = ({ active, setActive }) => {
   return (
     <View style={styles.container}>
       <ScrollView
@@ -45,10 +45,10 @@ const Category = ({ selected, onChange }) => {
         {categories.map((item) => (
           <TouchableOpacity
             key={item}
-            style={[styles.pill, selected === item && styles.activePill]}
-            onPress={() => onChange(item)}
+            style={[styles.pill, active === item && styles.activePill]}
+            onPress={() => setActive(item)}
           >
-            <Text style={[styles.text, selected === item && styles.activeText]}>
+            <Text style={[styles.text, active === item && styles.activeText]}>
               {item}
             </Text>
           </TouchableOpacity>
