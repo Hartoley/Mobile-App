@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -34,9 +34,7 @@ const categories = [
   "Others",
 ];
 
-const Category = () => {
-  const [active, setActive] = useState("All");
-
+const Category = ({ selected, onChange }) => {
   return (
     <View style={styles.container}>
       <ScrollView
@@ -47,10 +45,10 @@ const Category = () => {
         {categories.map((item) => (
           <TouchableOpacity
             key={item}
-            style={[styles.pill, active === item && styles.activePill]}
-            onPress={() => setActive(item)}
+            style={[styles.pill, selected === item && styles.activePill]}
+            onPress={() => onChange(item)}
           >
-            <Text style={[styles.text, active === item && styles.activeText]}>
+            <Text style={[styles.text, selected === item && styles.activeText]}>
               {item}
             </Text>
           </TouchableOpacity>
@@ -84,13 +82,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   activePill: {
-    backgroundColor: "rgb(0,20,77)", // subtle green
+    backgroundColor: "rgb(0,20,77)",
     borderColor: "#a3b18a",
   },
   text: {
     fontSize: 13,
     color: "#333",
-    fontFamily: "serif", // swap with custom font later
+    fontFamily: "serif",
   },
   activeText: {
     color: "#fff",

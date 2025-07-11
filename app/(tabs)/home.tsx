@@ -15,7 +15,9 @@ import YouTubeHeader from "../header";
 
 export default function Products() {
   const router = useRouter();
+  const [allProducts, setAllProducts] = useState([]);
   const [products, setProducts] = useState([]);
+  const [category, setCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -23,15 +25,33 @@ export default function Products() {
     try {
       setLoading(true);
       const res = await fetch(
-        "https://qurioans.onrender.com/mobile/products?page=1&limit=20"
+        "https://qurioans.onrender.com/mobile/products?page=1&limit=100"
       );
       const data = await res.json();
-      setProducts(data.products);
+      setAllProducts(data.products);
+      filterProducts(data.products, category);
     } catch (err) {
       console.error("Failed to fetch:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterProducts = (data, selectedCategory) => {
+    if (selectedCategory === "All") {
+      setProducts(data);
+    } else {
+      const filtered = data.filter(
+        (item) =>
+          item.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
+      setProducts(filtered);
+    }
+  };
+
+  const onCategoryChange = (cat) => {
+    setCategory(cat);
+    filterProducts(allProducts, cat);
   };
 
   const onRefresh = () => {
@@ -69,45 +89,13 @@ export default function Products() {
     </TouchableOpacity>
   );
 
-  const renderPlaceholder = (_, index) => (
-    <View key={index} style={styles.card}>
-      <View style={[styles.image, { backgroundColor: "#e5e7eb" }]} />
-      <View style={styles.heart}>
-        <AntDesign name="hearto" size={16} color="#ccc" />
-      </View>
-      <View
-        style={{
-          height: 12,
-          backgroundColor: "#e5e7eb",
-          borderRadius: 4,
-          marginTop: 8,
-          width: "70%",
-        }}
-      />
-      <View style={[styles.row, { marginTop: 6 }]}>
-        {[...Array(5)].map((_, i) => (
-          <AntDesign key={i} name="star" size={12} color="#d1d5db" />
-        ))}
-      </View>
-      <View
-        style={{
-          height: 14,
-          backgroundColor: "#e5e7eb",
-          borderRadius: 4,
-          width: "40%",
-          marginTop: 6,
-        }}
-      />
-    </View>
-  );
-
   return (
     <View className="h-full w-full bg-[rgb(215,223,243)]">
       <YouTubeHeader />
-      <Category />
+      <Category selected={category} onChange={onCategoryChange} />
       <FlatList
-        data={loading || refreshing ? Array.from({ length: 6 }) : products}
-        renderItem={loading || refreshing ? renderPlaceholder : renderItem}
+        data={loading || refreshing ? [] : products}
+        renderItem={renderItem}
         keyExtractor={(item, index) =>
           loading || refreshing ? index.toString() : item._id
         }
@@ -125,7 +113,7 @@ export default function Products() {
 const styles = StyleSheet.create({
   list: {
     paddingHorizontal: 10,
-    paddingBottom: 100, // for buyer screen comfort
+    paddingBottom: 100,
   },
   card: {
     backgroundColor: "#fff",
