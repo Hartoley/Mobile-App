@@ -15,7 +15,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  RefreshControl,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
@@ -264,6 +263,7 @@ export default function EditProductScreen() {
         category: p.category || "Others",
         meta: p.meta || {},
       });
+
       setThumbnail({ uri: p.thumbnail });
       setImages(p.images.map((url) => ({ uri: url })));
     } catch (err) {
@@ -418,19 +418,46 @@ export default function EditProductScreen() {
         </TouchableOpacity>
 
         <Text style={styles.label}>Gallery Images</Text>
-        <ScrollView horizontal style={{ marginBottom: 10 }}>
-          {images.map((img, index) => (
-            <View key={index} style={styles.imageWrap}>
-              <Image source={{ uri: img.uri }} style={styles.image} />
-              <TouchableOpacity
-                style={styles.removeBtn}
-                onPress={() => removeImage(index)}
-              >
-                <Ionicons name="close" size={14} color="white" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
+        <View style={{ height: 110, marginBottom: 10, position: "relative" }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={true}
+            contentContainerStyle={{
+              paddingHorizontal: 10,
+              alignItems: "center",
+            }}
+          >
+            {images.map((img, index) => (
+              <View key={index} style={styles.imageWrap}>
+                <Image source={{ uri: img.uri }} style={styles.image} />
+                <TouchableOpacity
+                  style={styles.removeBtn}
+                  onPress={() => removeImage(index)}
+                >
+                  <Ionicons name="close" size={14} color="white" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* 👇 Scroll hint icon */}
+          <Ionicons
+            name="chevron-forward"
+            size={24}
+            color="#777"
+            style={{
+              position: "absolute",
+              right: 5,
+              top: "40%",
+              zIndex: 10,
+              backgroundColor: "#d7dff3",
+              borderRadius: 12,
+              padding: 2,
+            }}
+            pointerEvents="none"
+          />
+        </View>
+
         <TouchableOpacity onPress={pickNewImage} style={styles.imageButton}>
           <Text style={styles.imageButtonText}>Add Image</Text>
         </TouchableOpacity>
@@ -550,5 +577,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 30,
   },
+  scrollHint: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 30,
+    backgroundColor: "transparent",
+    zIndex: 1,
+    // iOS-only fade effect
+    backgroundImage:
+      "linear-gradient(to left, rgba(215, 223, 243, 1), rgba(215, 223, 243, 0))",
+  },
+
   saveText: { color: "#fff", marginLeft: 8, fontWeight: "600", fontSize: 15 },
 });
