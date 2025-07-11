@@ -23,17 +23,20 @@ const CartScreen = () => {
   const screenHeight = Dimensions.get("window").height;
 
   useEffect(() => {
-    const fetchStoredUser = async () => {
+    const init = async () => {
       const userId = await AsyncStorage.getItem("QurioUser");
       if (userId) {
         setStoredUser(userId);
+        fetchCart(userId);
+      } else {
+        console.log("No stored user found.");
+        setLoading(false);
       }
     };
-
-    fetchStoredUser();
+    init();
   }, []);
 
-  const fetchCart = async () => {
+  const fetchCart = async (userId) => {
     try {
       const response = await fetch(
         `https://qurioans.onrender.com/qurioans/getcart/${userId}`,
@@ -42,8 +45,14 @@ const CartScreen = () => {
           headers: { "Content-Type": "application/json" },
         }
       );
-      const data = await response.json();
-      console.log(data);
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.error("Failed to parse JSON:", text);
+        return;
+      }
 
       if (data.cart && data.cart.items) {
         const formatted = data.cart.items.map((item) => ({
@@ -56,6 +65,8 @@ const CartScreen = () => {
           color: "Default",
         }));
         setCartItems(formatted);
+      } else {
+        setCartItems([]);
       }
     } catch (error) {
       console.error("Error fetching cart:", error);
