@@ -16,6 +16,7 @@ import {
   UIManager,
   View,
 } from "react-native";
+import PaymentSection from "./cardInout";
 
 if (
   Platform.OS === "android" &&
@@ -226,24 +227,7 @@ const EditProfile = () => {
         </Section>
 
         {/* PAYMENT INFO */}
-        <Section
-          title="Payment & Shipping"
-          expanded={sections.payment}
-          onToggle={() => toggleSection("payment")}
-        >
-          <Label text="Payment Method" />
-          <TextInput
-            style={styles.input}
-            value={form.card}
-            onChangeText={(text) => handleChange("card", text)}
-          />
-          <Label text="Shipping Info" />
-          <TextInput
-            style={styles.inputDisabled}
-            value="Fast delivery, 3-5 days"
-            editable={false}
-          />
-        </Section>
+        <PaymentSection />
 
         {/* PREFERENCES */}
         <Section
