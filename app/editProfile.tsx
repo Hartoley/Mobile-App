@@ -16,7 +16,6 @@ import {
   UIManager,
   View,
 } from "react-native";
-import PaymentSection from "./cardInout";
 
 if (
   Platform.OS === "android" &&
@@ -227,7 +226,64 @@ const EditProfile = () => {
         </Section>
 
         {/* PAYMENT INFO */}
-        <PaymentSection />
+        <Section
+          title="Payment & Shipping"
+          expanded={sections.payment}
+          onToggle={() => toggleSection("payment")}
+        >
+          <Label text="Select Payment Method" />
+          <View style={styles.methodRow}>
+            {["Card", "Bank Transfer", "USSD"].map((method) => (
+              <TouchableOpacity
+                key={method}
+                style={[
+                  styles.methodButton,
+                  form.card === method && styles.selectedMethod,
+                ]}
+                onPress={() => handleChange("card", method)}
+              >
+                <Text
+                  style={[
+                    styles.methodText,
+                    form.card === method && styles.selectedText,
+                  ]}
+                >
+                  {method}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Conditionally render card fields */}
+          {form.card === "Card" && (
+            <>
+              <Label text="Cardholder Name" />
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. John Doe"
+                value={form.cardholder || ""}
+                onChangeText={(text) => handleChange("cardholder", text)}
+              />
+              <Label text="Card Number" />
+              <TextInput
+                style={styles.input}
+                placeholder="1234 5678 9012 3456"
+                keyboardType="numeric"
+                maxLength={19}
+                value={form.cardNumber || ""}
+                onChangeText={(text) => handleChange("cardNumber", text)}
+              />
+              {/* You can add expiry and cvv if needed */}
+            </>
+          )}
+
+          <Label text="Shipping Info" />
+          <TextInput
+            style={styles.inputDisabled}
+            value="Fast delivery, 3-5 days"
+            editable={false}
+          />
+        </Section>
 
         {/* PREFERENCES */}
         <Section
@@ -351,6 +407,31 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 16,
   },
+  methodRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  methodButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+  },
+  selectedMethod: {
+    backgroundColor: "rgb(0,20,77)",
+    borderColor: "rgb(0,20,77)",
+  },
+  methodText: {
+    fontSize: 13,
+    color: "#333",
+  },
+  selectedText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+
   container: {
     flex: 1,
     backgroundColor: "rgb(215,223,243)",

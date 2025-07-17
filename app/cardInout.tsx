@@ -1,5 +1,15 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Button,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { WebView } from "react-native-webview";
 
 const PaymentSection = () => {
   const [form, setForm] = useState({
@@ -10,94 +20,101 @@ const PaymentSection = () => {
     cvv: "",
   });
 
-  const [cardValidation, setCardValidation] = useState({
-    type: "",
-    isValid: true,
-  });
+  const [storedUserEmail, setStoredUserEmail] = useState("");
+  const [showWebView, setShowWebView] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
+
+  useEffect(() => {
+    const fetchStoredUserEmail = async () => {
+      const email = await AsyncStorage.getItem("QurioUserEmail");
+      if (email) {
+        setStoredUserEmail(email);
+      }
+    };
+    fetchStoredUserEmail();
+  }, []);
 
   const handleChange = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Format number as 1234 5678 9012 3456
-  const formatCardNumber = (text) => {
-    return text
-      .replace(/\D/g, "")
-      .replace(/(.{4})/g, "$1 ")
-      .trim();
+  const handlePayment = async () => {
+    if (!storedUserEmail) {
+      Alert.alert("Email not found", "Unable to get user email from storage.");
+      return;
+    }
+
+    // You can also dynamically generate a transaction ref here
+    const ref = `txn_${Date.now()}`;
+
+    const url = `https://paystack.com/pay/ekn0y80klo?email=${storedUserEmail}&amount=1000&reference=${ref}`;
+    setPaymentUrl(url);
+    setShowWebView(true);
   };
 
-  // Card Type Detection
-  const detectCardType = (number) => {
-    const cleaned = number.replace(/\s/g, "");
-    if (/^4[0-9]{0,}$/.test(cleaned)) return "Visa";
-    if (
-      /^5[1-5][0-9]{0,}$/.test(cleaned) ||
-      /^2(2[2-9]|[3-6]|7[01])[0-9]{0,}$/.test(cleaned)
-    )
-      return "MasterCard";
-    if (/^506[0-9]{0,}$/.test(cleaned) || /^65[0-9]{0,}$/.test(cleaned))
-      return "Verve";
-    return "Unknown";
-  };
+  const handleWebViewNavigation = (event) => {
+    const { url } = event;
 
-  // Luhn Check
-  const luhnCheck = (number) => {
-    const digits = number.replace(/\D/g, "").split("").reverse();
-    const sum = digits.reduce((acc, val, idx) => {
-      let n = parseInt(val);
-      if (idx % 2 !== 0) {
-        n *= 2;
-        if (n > 9) n -= 9;
+    // Detect Paystack success
+    if (url.includes("paystack.com/close")) {
+      Alert.alert("Transaction closed.");
+      setShowWebView(false);
+    }
+
+    if (url.includes("reference=")) {
+      const refMatch = url.match(/reference=([\w-]+)/);
+      const reference = refMatch?.[1];
+
+      if (reference) {
+        Alert.alert("Payment Successful", `Ref: ${reference}`);
+        saveCardReference(reference);
+        setShowWebView(false);
       }
-      return acc + n;
-    }, 0);
-    return sum % 10 === 0;
+    }
+  };
+
+  const saveCardReference = async (reference) => {
+    try {
+      const response = await fetch(
+        "https://qurioans.onrender.com/qurioans/api/save-card",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userEmail: storedUserEmail,
+            ref: reference,
+          }),
+        }
+      );
+      const data = await response.json();
+      console.log("Saved to DB:", data);
+    } catch (error) {
+      console.error("Error saving to backend:", error);
+    }
   };
 
   return (
     <View style={styles.sectionContainer}>
       <Text style={styles.sectionTitle}>Payment & Shipping</Text>
 
-      {/* Cardholder Name */}
       <Text style={styles.label}>Cardholder Name</Text>
       <TextInput
         style={styles.input}
         placeholder="e.g. John Doe"
-        keyboardType="default"
         value={form.cardholder}
         onChangeText={(text) => handleChange("cardholder", text)}
       />
 
-      {/* Card Number */}
       <Text style={styles.label}>Card Number</Text>
       <TextInput
-        style={[
-          styles.input,
-          !cardValidation.isValid &&
-            form.cardNumber.length >= 16 &&
-            styles.inputError,
-        ]}
+        style={styles.input}
         placeholder="1234 5678 9012 3456"
         keyboardType="numeric"
         maxLength={19}
         value={form.cardNumber}
-        onChangeText={(text) => {
-          const formatted = formatCardNumber(text);
-          const type = detectCardType(formatted);
-          const valid = luhnCheck(formatted);
-          handleChange("cardNumber", formatted);
-          setCardValidation({ type, isValid: valid });
-        }}
+        onChangeText={(text) => handleChange("cardNumber", text)}
       />
-      {cardValidation.type !== "" && (
-        <Text style={styles.cardType}>Card Type: {cardValidation.type}</Text>
-      )}
-      {!cardValidation.isValid && form.cardNumber.length >= 16 && (
-        <Text style={styles.error}>Invalid card number</Text>
-      )}
 
-      {/* Expiry + CVV */}
       <View style={styles.row}>
         <View style={styles.column}>
           <Text style={styles.label}>Expiry MM</Text>
@@ -135,13 +152,29 @@ const PaymentSection = () => {
         </View>
       </View>
 
-      {/* Shipping Info */}
       <Text style={styles.label}>Shipping Info</Text>
       <TextInput
         style={styles.inputDisabled}
         value="Fast delivery, 3-5 days"
         editable={false}
       />
+
+      <View style={{ marginTop: 20 }}>
+        <Button
+          title="Verify with Paystack"
+          onPress={handlePayment}
+          color="rgb(0,20,77)" // customize button color
+        />
+      </View>
+
+      {/* WebView Modal */}
+      <Modal visible={showWebView}>
+        <WebView
+          source={{ uri: paymentUrl }}
+          onNavigationStateChange={handleWebViewNavigation}
+          startInLoadingState
+        />
+      </Modal>
     </View>
   );
 };
@@ -162,9 +195,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: "#333",
-    marginBottom: 6,
     marginTop: 12,
+    marginBottom: 4,
   },
   input: {
     backgroundColor: "#fff",
@@ -181,19 +213,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     color: "#666",
-  },
-  inputError: {
-    borderColor: "red",
-  },
-  error: {
-    color: "red",
-    fontSize: 12,
-    marginTop: 6,
-  },
-  cardType: {
-    color: "#666",
-    fontSize: 13,
-    marginTop: 6,
   },
   row: {
     flexDirection: "row",
