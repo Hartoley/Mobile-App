@@ -46,8 +46,7 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-font",
-      "expo-facebook"
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

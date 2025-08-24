@@ -83,7 +83,7 @@ const EditProfile = () => {
           email: user.email || "",
           phoneNumber: user.phoneNumber || "",
           address: user.address || "",
-          card: user.card || "",
+          payMethod: user.payMethod || "", // ✅ use payMethod instead of card
           language: user.language || "",
         });
         setSettings({
@@ -238,14 +238,14 @@ const EditProfile = () => {
                 key={method}
                 style={[
                   styles.methodButton,
-                  form.card === method && styles.selectedMethod,
+                  form.payMethod === method && styles.selectedMethod,
                 ]}
-                onPress={() => handleChange("card", method)}
+                onPress={() => handleChange("payMethod", method)}
               >
                 <Text
                   style={[
                     styles.methodText,
-                    form.card === method && styles.selectedText,
+                    form.payMethod === method && styles.selectedText,
                   ]}
                 >
                   {method}
@@ -253,29 +253,6 @@ const EditProfile = () => {
               </TouchableOpacity>
             ))}
           </View>
-
-          {/* Conditionally render card fields */}
-          {form.card === "Card" && (
-            <>
-              <Label text="Cardholder Name" />
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. John Doe"
-                value={form.cardholder || ""}
-                onChangeText={(text) => handleChange("cardholder", text)}
-              />
-              <Label text="Card Number" />
-              <TextInput
-                style={styles.input}
-                placeholder="1234 5678 9012 3456"
-                keyboardType="numeric"
-                maxLength={19}
-                value={form.cardNumber || ""}
-                onChangeText={(text) => handleChange("cardNumber", text)}
-              />
-              {/* You can add expiry and cvv if needed */}
-            </>
-          )}
 
           <Label text="Shipping Info" />
           <TextInput
@@ -392,6 +369,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 30,
+    backgroundColor: "rgb(215,223,243)",
   },
   skeletonAvatar: {
     width: 80,
