@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "qurioans-mobile",
-    "slug": "qurioans-mobile",
+    "name": "Flipzy",
+    "slug": "flipzy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "qurioansmobile",
+    "icon": "./assets/images/flipzy.png",
+    "scheme": "flipzy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -23,9 +23,9 @@
       }
     },
     "android": {
-      "package": "com.qurioans.app",
+      "package": "com.flipzy.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/flipzy.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
@@ -33,14 +33,14 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/flipzy.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/flipzy.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
@@ -54,8 +54,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "2d824401-82de-4456-9483-638876b3863c"
+        "projectId": "db916b54-6062-4b36-8ea6-24187d0cebb8"
       }
-    }
+    },
+    "owner": "keenatee"
   }
 }
