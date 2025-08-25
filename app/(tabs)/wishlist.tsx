@@ -30,19 +30,33 @@ const Streaks = () => {
         return;
       }
 
-      const response = await fetch(
+      // fetch wishlist
+      const wishlistRes = await fetch(
         `https://qurioans.onrender.com/qurioans/getwishlist/${storedUser}`
       );
-      const data = await response.json();
+      const wishlistData = await wishlistRes.json();
 
-      if (data.wishlist && data.wishlist.products) {
-        const formatted = data.wishlist.products.map((item) => ({
-          id: item._id,
-          title: item.title,
-          price: item.price,
-          thumbnail: item.thumbnail,
-          rating: item.rating || 0,
-        }));
+      // fetch cart
+      const cartRes = await fetch(
+        `https://qurioans.onrender.com/qurioans/getcart/${storedUser}`
+      );
+      const cartData = await cartRes.json();
+
+      const cartIds =
+        cartData?.cart?.items?.map((item) => item.product?._id) || [];
+
+      if (wishlistData.wishlist && wishlistData.wishlist.products) {
+        const formatted = wishlistData.wishlist.products
+          // exclude items already in cart
+          .filter((item) => !cartIds.includes(item._id))
+          .map((item) => ({
+            id: item._id,
+            title: item.title,
+            price: item.price,
+            thumbnail: item.thumbnail,
+            rating: item.rating || 0,
+          }));
+
         setWishlistItems(formatted);
       }
     } catch (error) {
