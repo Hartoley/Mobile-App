@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // ✅ import storage
 import Category from "../category";
 import YouTubeHeader from "../header";
 
@@ -21,6 +22,7 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // ✅ Fetch products from API
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -28,10 +30,27 @@ export default function Products() {
         "https://qurioans.onrender.com/mobile/products?page=1&limit=20"
       );
       const data = await res.json();
-      setProducts(data.products);
-      setFiltered(data.products);
+
+      if (data.products?.length) {
+        setProducts(data.products);
+        setFiltered(data.products);
+
+        // ✅ Save products to storage
+        await AsyncStorage.setItem(
+          "cachedProducts",
+          JSON.stringify(data.products)
+        );
+      }
     } catch (err) {
       console.error("Failed to fetch:", err);
+
+      // ✅ Load fallback from cache
+      const cached = await AsyncStorage.getItem("cachedProducts");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setProducts(parsed);
+        setFiltered(parsed);
+      }
     } finally {
       setLoading(false);
     }

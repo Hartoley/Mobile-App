@@ -4,6 +4,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import * as Updates from "expo-updates"; // ✅ import Updates
 import "./globals.css";
 
 function RouteGuard({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
       const storedUserId = await AsyncStorage.getItem("QurioUser");
       const storedUserEmail = await AsyncStorage.getItem("QurioUserEmail");
       const storedUserName = await AsyncStorage.getItem("QurioUserName");
-    }); // every 5 seconds
+    }, 5000); // every 5 seconds ✅ fixed missing delay
 
     return () => clearInterval(interval);
   }, []);
@@ -53,6 +54,23 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  // ✅ Update check effect
+  useEffect(() => {
+    async function checkUpdate() {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          console.log("New update found, fetching...");
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync(); // reload into new build
+        }
+      } catch (e) {
+        console.log("Update check failed:", e);
+      }
+    }
+    checkUpdate();
+  }, []);
+
   return (
     <AuthProvider>
       <PaperProvider>

@@ -2,8 +2,6 @@ import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import { FlutterwaveInit, FlutterwaveButton } from "flutterwave-react-native";
-import flipzyLogo from "../../assets/images/flipzy.png";
 import Constants from "expo-constants";
 import { WebView } from "react-native-webview";
 import {
@@ -29,8 +27,6 @@ const CartScreen = () => {
   const [showWebView, setShowWebView] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState("");
 
-  const userId = storedUser; // replace with your auth logic
-
   const screenHeight = Dimensions.get("window").height;
 
   useEffect(() => {
@@ -47,7 +43,7 @@ const CartScreen = () => {
     init();
   }, []);
 
-  const fetchCart = async (userId) => {
+  const fetchCart = async (userId: string) => {
     try {
       const response = await fetch(
         `https://qurioans.onrender.com/qurioans/getcart/${userId}`,
@@ -86,11 +82,7 @@ const CartScreen = () => {
     }
   };
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
-
-  const updateCartItemQty = async (productId, action) => {
+  const updateCartItemQty = async (productId: string, action: string) => {
     try {
       const response = await fetch(
         `https://qurioans.onrender.com/qurioans/update-cart/${storedUser}`,
@@ -109,9 +101,35 @@ const CartScreen = () => {
         console.error("Failed to parse JSON:", text);
         return;
       }
-      fetchCart();
+      if (storedUser) fetchCart(storedUser);
     } catch (error) {
       console.error("Error updating cart item:", error);
+    }
+  };
+
+  const deleteCartItem = async (productId: string) => {
+    try {
+      const response = await fetch(
+        `https://qurioans.onrender.com/qurioans/remove-from-cart/${storedUser}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+        }
+      );
+
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.error("Failed to parse JSON:", text);
+        return;
+      }
+
+      if (storedUser) fetchCart(storedUser);
+    } catch (error) {
+      console.error("Error deleting cart item:", error);
     }
   };
 
@@ -120,10 +138,8 @@ const CartScreen = () => {
   const delivery = 0;
   const subTotal = total - discount + delivery;
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchCart(storedUser); // re-fetch cart for current user
-    setRefreshing(false);
+  const onRefresh = () => {
+    if (storedUser) fetchCart(storedUser);
   };
 
   const handlePayment = async () => {
@@ -138,7 +154,6 @@ const CartScreen = () => {
       }
 
       const txRef = `qurio_${Date.now()}`;
-
       const logoUrl = "https://qurioans.onrender.com/images/flipzy.png";
 
       const flutterwaveUrl = `https://checkout.flutterwave.com/v3/hosted/pay?public_key=FLWPUBK_TEST-45d26f9315fd37752c266b29ba8e67fe-X&tx_ref=${txRef}&amount=${subTotal}&currency=NGN&payment_options=card,ussd,banktransfer,qr,mobilemoney&customer[email]=${encodeURIComponent(
@@ -178,7 +193,6 @@ const CartScreen = () => {
           return;
         }
 
-        // Verify payment
         const response = await fetch(
           `https://qurioans.onrender.com/qurioans/payment/callback?tx_ref=${tx_ref}&userId=${userId}`,
           { method: "GET" }
@@ -252,8 +266,8 @@ const CartScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["rgb(0,20,77)"]} // optional, Android
-              tintColor="rgb(0,20,77)" // optional, iOS
+              colors={["rgb(0,20,77)"]}
+              tintColor="rgb(0,20,77)"
             />
           }
         >
@@ -298,7 +312,7 @@ const CartScreen = () => {
                 </View>
 
                 <View style={{ alignItems: "center" }}>
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteCartItem(item.id)}>
                     <Feather name="trash-2" size={20} color="grey" />
                   </TouchableOpacity>
 
@@ -381,7 +395,6 @@ const CartScreen = () => {
         {/* Modal for Flutterwave Payment */}
         <Modal visible={showWebView} animationType="slide">
           <View style={{ flex: 1 }}>
-            {/* Header with Close Button */}
             <View
               style={{
                 height: 60,
@@ -425,7 +438,6 @@ const CartScreen = () => {
           </View>
         </Modal>
 
-        {/* Continue Button */}
         <TouchableOpacity
           onPress={handlePayment}
           style={{

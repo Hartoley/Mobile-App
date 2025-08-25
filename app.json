@@ -67,8 +67,11 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/db916b54-6062-4b36-8ea6-24187d0cebb8"
-    }
+   "updates": {
+  "url": "https://u.expo.dev/db916b54-6062-4b36-8ea6-24187d0cebb8",
+  "checkAutomatically": "ON_LOAD",
+  "fallbackToCacheTimeout": 0
+}
+
   }
 }
