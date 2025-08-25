@@ -54,18 +54,30 @@ const Profile = () => {
     if (!storedUser) return;
     setLoading(true);
     try {
+      // Try local cache first
+      const cachedUser = await AsyncStorage.getItem("cachedUserProfile");
+      if (cachedUser) {
+        setUser(JSON.parse(cachedUser));
+      }
+
+      // Fetch fresh data from API
       const res = await fetch(
         `https://qurioans.onrender.com/qurioans/getuser/${storedUser}`
       );
       const data = await res.json();
       if (data.status) {
         setUser(data.data);
+        await AsyncStorage.setItem(
+          "cachedUserProfile",
+          JSON.stringify(data.data)
+        );
       } else {
         setUser(null);
       }
     } catch (error) {
       console.error("Fetch user failed:", error);
-      setUser(null);
+      // fallback: if cache already shown, don't reset
+      if (!user) setUser(null);
     } finally {
       setLoading(false);
     }
@@ -89,14 +101,98 @@ const Profile = () => {
   const edit = () => {
     router.push("/editProfile");
   };
+
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <View style={styles.skeletonAvatar} />
-        <View style={styles.skeletonLine} />
-        <View style={styles.skeletonLine} />
-        <View style={styles.skeletonLine} />
-      </View>
+      <ScrollView style={{ flex: 1, backgroundColor: "rgb(215,223,243)" }}>
+        {/* Cover Skeleton */}
+        <View
+          style={{
+            height: 180,
+            backgroundColor: "#e5e7eb",
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+          }}
+        />
+
+        {/* Avatar + Info */}
+        <View style={{ alignItems: "center", marginTop: -60 }}>
+          <View
+            style={{
+              width: 120,
+              height: 120,
+              borderRadius: 60,
+              backgroundColor: "#d1d5db",
+              borderWidth: 4,
+              borderColor: "white",
+            }}
+          />
+          <View
+            style={{
+              marginTop: 16,
+              width: 140,
+              height: 20,
+              backgroundColor: "#e5e7eb",
+              borderRadius: 6,
+            }}
+          />
+          <View
+            style={{
+              marginTop: 8,
+              width: 200,
+              height: 16,
+              backgroundColor: "#e5e7eb",
+              borderRadius: 6,
+            }}
+          />
+        </View>
+
+        {/* Stats row skeleton */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-around",
+            marginTop: 24,
+          }}
+        >
+          {[1, 2, 3].map((i) => (
+            <View key={i} style={{ alignItems: "center" }}>
+              <View
+                style={{
+                  width: 50,
+                  height: 20,
+                  backgroundColor: "#e5e7eb",
+                  borderRadius: 4,
+                  marginBottom: 6,
+                }}
+              />
+              <View
+                style={{
+                  width: 60,
+                  height: 14,
+                  backgroundColor: "#d1d5db",
+                  borderRadius: 4,
+                }}
+              />
+            </View>
+          ))}
+        </View>
+
+        {/* Section skeletons */}
+        <View style={{ marginTop: 30, paddingHorizontal: 20 }}>
+          {[1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                height: 70,
+                backgroundColor: "#f3f4f6",
+                borderRadius: 12,
+                marginBottom: 16,
+              }}
+            />
+          ))}
+        </View>
+      </ScrollView>
     );
   }
 
