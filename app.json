@@ -18,6 +18,12 @@
           },
           {
             "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
           }
         ]
       }
@@ -57,6 +63,12 @@
         "projectId": "db916b54-6062-4b36-8ea6-24187d0cebb8"
       }
     },
-    "owner": "keenatee"
+    "owner": "keenatee",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/db916b54-6062-4b36-8ea6-24187d0cebb8"
+    }
   }
 }

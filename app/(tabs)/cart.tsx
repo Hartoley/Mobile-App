@@ -2,6 +2,10 @@ import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
+import { FlutterwaveInit, FlutterwaveButton } from "flutterwave-react-native";
+import flipzyLogo from "../../assets/images/flipzy.png";
+import Constants from "expo-constants";
+import { WebView } from "react-native-webview";
 import {
   ActivityIndicator,
   Dimensions,
@@ -10,6 +14,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
+  Alert,
+  Modal,
 } from "react-native";
 
 const CartScreen = () => {
@@ -17,6 +24,10 @@ const CartScreen = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [storedUser, setStoredUser] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const isExpoGo = Constants.appOwnership === "expo";
+  const [showWebView, setShowWebView] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState("");
 
   const userId = storedUser; // replace with your auth logic
 
@@ -109,6 +120,86 @@ const CartScreen = () => {
   const delivery = 0;
   const subTotal = total - discount + delivery;
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchCart(storedUser); // re-fetch cart for current user
+    setRefreshing(false);
+  };
+
+  const handlePayment = async () => {
+    try {
+      const storedUserId = await AsyncStorage.getItem("QurioUser");
+      const storedUserEmail = await AsyncStorage.getItem("QurioUserEmail");
+      const storedUserName = await AsyncStorage.getItem("QurioUserName");
+
+      if (!storedUserId || !storedUserEmail || !storedUserName) {
+        Alert.alert("User info missing", "Please login again.");
+        return;
+      }
+
+      const txRef = `qurio_${Date.now()}`;
+
+      const logoUrl = "https://qurioans.onrender.com/images/flipzy.png";
+
+      const flutterwaveUrl = `https://checkout.flutterwave.com/v3/hosted/pay?public_key=FLWPUBK_TEST-45d26f9315fd37752c266b29ba8e67fe-X&tx_ref=${txRef}&amount=${subTotal}&currency=NGN&payment_options=card,ussd,banktransfer,qr,mobilemoney&customer[email]=${encodeURIComponent(
+        storedUserEmail
+      )}&customer[name]=${encodeURIComponent(
+        storedUserName
+      )}&customizations[title]=Qurioans Payment&customizations[description]=Payment for your order&customizations[logo]=${encodeURIComponent(
+        logoUrl
+      )}&redirect_url=${encodeURIComponent(
+        `https://qurioans.onrender.com/qurioans/payment/callback?userId=${storedUserId}&tx_ref=${txRef}`
+      )}`;
+
+      setCheckoutUrl(flutterwaveUrl);
+      setShowWebView(true);
+    } catch (error) {
+      console.error("Payment error:", error);
+      Alert.alert(
+        "Payment failed",
+        "Unable to initiate payment. Please try again."
+      );
+    }
+  };
+
+  const handleWebViewNavigationStateChange = async (navState) => {
+    const { url } = navState;
+
+    if (url.includes("/payment/callback")) {
+      setShowWebView(false);
+
+      try {
+        const urlObj = new URL(url);
+        const tx_ref = urlObj.searchParams.get("tx_ref");
+        const userId = urlObj.searchParams.get("userId");
+
+        if (!tx_ref || !userId) {
+          console.warn("Missing tx_ref or userId in callback URL");
+          return;
+        }
+
+        // Verify payment
+        const response = await fetch(
+          `https://qurioans.onrender.com/qurioans/payment/callback?tx_ref=${tx_ref}&userId=${userId}`,
+          { method: "GET" }
+        );
+        const data = await response.json();
+
+        if (data.error) {
+          Alert.alert("Payment verification failed", data.error);
+        } else {
+          navigation.navigate("OrderSuccess", { orderId: data.orderId });
+        }
+      } catch (backendError) {
+        console.error("Backend verification error:", backendError);
+        Alert.alert(
+          "Verification Error",
+          "Error verifying payment. Please try again."
+        );
+      }
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: "rgb(215,223,243)" }}>
       {/* Header */}
@@ -157,81 +248,91 @@ const CartScreen = () => {
         <ScrollView
           style={{ padding: 16, maxHeight: screenHeight * 0.85 }}
           contentContainerStyle={{ paddingBottom: 20 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["rgb(0,20,77)"]} // optional, Android
+              tintColor="rgb(0,20,77)" // optional, iOS
+            />
+          }
         >
-          {cartItems.map((item) => (
-            <View
-              key={item.id}
-              style={{
-                backgroundColor: "white",
-                borderRadius: 10,
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 12,
-                padding: 10,
-              }}
-            >
-              <Image
-                source={{ uri: item.image }}
+          <View>
+            {cartItems.map((item) => (
+              <View
+                key={item.id}
                 style={{
-                  width: 60,
-                  height: 60,
+                  backgroundColor: "white",
                   borderRadius: 10,
-                  marginRight: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 12,
+                  padding: 10,
                 }}
-              />
-
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: "bold", fontSize: 12 }}>
-                  {item.name}
-                </Text>
-                <Text
+              >
+                <Image
+                  source={{ uri: item.image }}
                   style={{
-                    color: "rgb(116,98,255)",
-                    fontWeight: "bold",
-                    fontSize: 12,
+                    width: 60,
+                    height: 60,
+                    borderRadius: 10,
+                    marginRight: 10,
                   }}
-                >
-                  ₦ {item.price}
-                </Text>
-                <Text style={{ fontSize: 12 }}>Size: {item.size}</Text>
-                <Text style={{ fontSize: 12 }}>Color: {item.color}</Text>
-              </View>
+                />
 
-              <View style={{ alignItems: "center" }}>
-                <TouchableOpacity>
-                  <Feather name="trash-2" size={20} color="grey" />
-                </TouchableOpacity>
-
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginTop: 10,
-                    backgroundColor: "#f0f0f0",
-                    borderRadius: 20,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={() => updateCartItemQty(item.id, "minus")}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: "bold", fontSize: 12 }}>
+                    {item.name}
+                  </Text>
+                  <Text
+                    style={{
+                      color: "rgb(116,98,255)",
+                      fontWeight: "bold",
+                      fontSize: 12,
+                    }}
                   >
-                    <Text style={{ fontSize: 18, color: "red" }}>-</Text>
+                    ₦ {item.price}
+                  </Text>
+                  <Text style={{ fontSize: 12 }}>Size: {item.size}</Text>
+                  <Text style={{ fontSize: 12 }}>Color: {item.color}</Text>
+                </View>
+
+                <View style={{ alignItems: "center" }}>
+                  <TouchableOpacity>
+                    <Feather name="trash-2" size={20} color="grey" />
                   </TouchableOpacity>
 
-                  <Text style={{ marginHorizontal: 8 }}>{item.qty}</Text>
-
-                  <TouchableOpacity
-                    onPress={() => updateCartItemQty(item.id, "add")}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 10,
+                      backgroundColor: "#f0f0f0",
+                      borderRadius: 20,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                    }}
                   >
-                    <Text style={{ fontSize: 18, color: "rgb(116,98,255)" }}>
-                      +
-                    </Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => updateCartItemQty(item.id, "minus")}
+                    >
+                      <Text style={{ fontSize: 18, color: "red" }}>-</Text>
+                    </TouchableOpacity>
+
+                    <Text style={{ marginHorizontal: 8 }}>{item.qty}</Text>
+
+                    <TouchableOpacity
+                      onPress={() => updateCartItemQty(item.id, "add")}
+                    >
+                      <Text style={{ fontSize: 18, color: "rgb(116,98,255)" }}>
+                        +
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            ))}
+          </View>
         </ScrollView>
       )}
 
@@ -260,7 +361,7 @@ const CartScreen = () => {
             style={{ flexDirection: "row", justifyContent: "space-between" }}
           >
             <Text style={{ fontSize: 13 }}>Discount</Text>
-            <Text>₦ {discount}</Text>
+            <Text style={{ fontSize: 13 }}>₦ {discount}</Text>
           </View>
           <View
             style={{ flexDirection: "row", justifyContent: "space-between" }}
@@ -277,8 +378,56 @@ const CartScreen = () => {
             </Text>
           </View>
         </View>
+        {/* Modal for Flutterwave Payment */}
+        <Modal visible={showWebView} animationType="slide">
+          <View style={{ flex: 1 }}>
+            {/* Header with Close Button */}
+            <View
+              style={{
+                height: 60,
+                backgroundColor: "rgb(0,20,77)",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 16,
+              }}
+            >
+              <Text
+                style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+              >
+                Payment
+              </Text>
+              <TouchableOpacity onPress={() => setShowWebView(false)}>
+                <Text style={{ color: "white", fontSize: 16 }}>Close</Text>
+              </TouchableOpacity>
+            </View>
 
+            <WebView
+              source={{ uri: checkoutUrl }}
+              startInLoadingState
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              originWhitelist={["*"]}
+              renderLoading={() => (
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <ActivityIndicator size="large" color="#000" />
+                  <Text>Loading payment page...</Text>
+                </View>
+              )}
+              onNavigationStateChange={handleWebViewNavigationStateChange}
+            />
+          </View>
+        </Modal>
+
+        {/* Continue Button */}
         <TouchableOpacity
+          onPress={handlePayment}
           style={{
             backgroundColor: "rgb(0,20,77)",
             borderRadius: 10,
