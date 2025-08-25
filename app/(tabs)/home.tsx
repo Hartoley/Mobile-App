@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import PaystackWebView from "react-native-paystack-webview";
 import Category from "../category";
 import YouTubeHeader from "../header";
 
@@ -31,7 +30,6 @@ export default function Products() {
       const data = await res.json();
       setProducts(data.products);
       setFiltered(data.products);
-      console.log("PaystackWebView:", PaystackWebView);
     } catch (err) {
       console.error("Failed to fetch:", err);
     } finally {
