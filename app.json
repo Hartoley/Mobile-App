@@ -4,6 +4,7 @@
     "slug": "flipzy",
     "version": "1.0.0",
     "orientation": "portrait",
+    "runtimeVersion": "1.0.0", 
     "icon": "./assets/images/flipzy.png",
     "scheme": "flipzy",
     "userInterfaceStyle": "automatic",
@@ -64,13 +65,13 @@
       }
     },
     "owner": "keenatee",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+  
    "updates": {
   "url": "https://u.expo.dev/db916b54-6062-4b36-8ea6-24187d0cebb8",
   "checkAutomatically": "ON_LOAD",
-  "fallbackToCacheTimeout": 0
+  "fallbackToCacheTimeout": 0,
+    "enabled": true
+
 }
 
   }
