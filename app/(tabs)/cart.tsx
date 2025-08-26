@@ -3,7 +3,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import Constants from "expo-constants";
-import { WebView } from "react-native-webview";
 import {
   ActivityIndicator,
   Dimensions,
@@ -14,18 +13,28 @@ import {
   View,
   RefreshControl,
   Alert,
-  Modal,
 } from "react-native";
 
+// ✅ Flutterwave SDK (native)
+import { FlutterwaveInit } from "flutterwave-react-native"; // <-- if your SDK exposes a different name (e.g. FlutterwaveCheckout or Flutterwave), swap it here.
+
+type CartItem = {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  qty: number;
+  size: string;
+  color: string;
+};
+
 const CartScreen = () => {
-  const navigation = useNavigation();
-  const [cartItems, setCartItems] = useState([]);
+  const navigation = useNavigation<any>();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [storedUser, setStoredUser] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const isExpoGo = Constants.appOwnership === "expo";
-  const [showWebView, setShowWebView] = useState(false);
-  const [checkoutUrl, setCheckoutUrl] = useState("");
 
   const screenHeight = Dimensions.get("window").height;
 
@@ -53,7 +62,7 @@ const CartScreen = () => {
         }
       );
       const text = await response.text();
-      let data;
+      let data: any;
       try {
         data = JSON.parse(text);
       } catch (err) {
@@ -62,7 +71,7 @@ const CartScreen = () => {
       }
 
       if (data.cart && data.cart.items) {
-        const formatted = data.cart.items.map((item) => ({
+        const formatted: CartItem[] = data.cart.items.map((item: any) => ({
           id: item.product._id,
           name: item.product.title,
           price: item.product.price,
@@ -79,10 +88,14 @@ const CartScreen = () => {
       console.error("Error fetching cart:", error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const updateCartItemQty = async (productId: string, action: string) => {
+  const updateCartItemQty = async (
+    productId: string,
+    action: "add" | "minus"
+  ) => {
     try {
       const response = await fetch(
         `https://qurioans.onrender.com/qurioans/update-cart/${storedUser}`,
@@ -94,9 +107,8 @@ const CartScreen = () => {
       );
 
       const text = await response.text();
-      let data;
       try {
-        data = JSON.parse(text);
+        JSON.parse(text);
       } catch (err) {
         console.error("Failed to parse JSON:", text);
         return;
@@ -119,9 +131,8 @@ const CartScreen = () => {
       );
 
       const text = await response.text();
-      let data;
       try {
-        data = JSON.parse(text);
+        JSON.parse(text);
       } catch (err) {
         console.error("Failed to parse JSON:", text);
         return;
@@ -139,10 +150,19 @@ const CartScreen = () => {
   const subTotal = total - discount + delivery;
 
   const onRefresh = () => {
+    setRefreshing(true);
     if (storedUser) fetchCart(storedUser);
   };
 
-  const handlePayment = async () => {
+  const payWithFlutterwave = async () => {
+    if (isExpoGo) {
+      Alert.alert(
+        "Unsupported in Expo Go",
+        "Flutterwave SDK is a native module. Please run a custom dev client (expo prebuild & expo run:android / ios) or the bare workflow."
+      );
+      return;
+    }
+
     try {
       const storedUserId = await AsyncStorage.getItem("QurioUser");
       const storedUserEmail = await AsyncStorage.getItem("QurioUserEmail");
@@ -154,63 +174,61 @@ const CartScreen = () => {
       }
 
       const txRef = `qurio_${Date.now()}`;
-      const logoUrl = "https://qurioans.onrender.com/images/flipzy.png";
 
-      const flutterwaveUrl = `https://checkout.flutterwave.com/v3/hosted/pay?public_key=FLWPUBK_TEST-45d26f9315fd37752c266b29ba8e67fe-X&tx_ref=${txRef}&amount=${subTotal}&currency=NGN&payment_options=card,ussd,banktransfer,qr,mobilemoney&customer[email]=${encodeURIComponent(
-        storedUserEmail
-      )}&customer[name]=${encodeURIComponent(
-        storedUserName
-      )}&customizations[title]=Qurioans Payment&customizations[description]=Payment for your order&customizations[logo]=${encodeURIComponent(
-        logoUrl
-      )}&redirect_url=${encodeURIComponent(
-        `https://qurioans.onrender.com/qurioans/payment/callback?userId=${storedUserId}&tx_ref=${txRef}`
-      )}`;
+      const result: any = await FlutterwaveInit({
+        public_key: "FLWPUBK_TEST-45d26f9315fd37752c266b29ba8e67fe-X",
+        tx_ref: txRef,
+        amount: Number(subTotal),
+        currency: "NGN",
+        payment_options: "card,ussd,banktransfer,qr,mobilemoney",
+        customer: {
+          email: storedUserEmail,
+          phonenumber: "", // optional
+          name: storedUserName,
+        },
+        customizations: {
+          title: "Qurioans Payment",
+          description: "Payment for your order",
+          logo: "https://qurioans.onrender.com/images/flipzy.png",
+        },
+      });
 
-      setCheckoutUrl(flutterwaveUrl);
-      setShowWebView(true);
-    } catch (error) {
-      console.error("Payment error:", error);
-      Alert.alert(
-        "Payment failed",
-        "Unable to initiate payment. Please try again."
-      );
-    }
-  };
+      // Typical result shape (varies by SDK version):
+      // { status: "successful" | "cancelled" | "failed", tx_ref, transaction_id?, flw_ref? ... }
+      console.log("Flutterwave result:", result);
 
-  const handleWebViewNavigationStateChange = async (navState) => {
-    const { url } = navState;
+      if (!result) {
+        Alert.alert("Payment", "No response from payment.");
+        return;
+      }
 
-    if (url.includes("/payment/callback")) {
-      setShowWebView(false);
+      if (result.status === "successful") {
+        // Verify on your backend by tx_ref (you already implemented verify_by_reference)
+        const verifyRes = await fetch(
+          `https://qurioans.onrender.com/qurioans/payment/verify?tx_ref=${encodeURIComponent(
+            txRef
+          )}&userId=${encodeURIComponent(storedUserId)}`
+        );
+        const verifyJson = await verifyRes.json();
+        console.log("✅ Backend verification response:", verifyJson);
 
-      try {
-        const urlObj = new URL(url);
-        const tx_ref = urlObj.searchParams.get("tx_ref");
-        const userId = urlObj.searchParams.get("userId");
-
-        if (!tx_ref || !userId) {
-          console.warn("Missing tx_ref or userId in callback URL");
+        if (verifyJson?.error) {
+          Alert.alert("Payment verification failed", verifyJson.error);
           return;
         }
 
-        const response = await fetch(
-          `https://qurioans.onrender.com/qurioans/payment/callback?tx_ref=${tx_ref}&userId=${userId}`,
-          { method: "GET" }
-        );
-        const data = await response.json();
-
-        if (data.error) {
-          Alert.alert("Payment verification failed", data.error);
-        } else {
-          navigation.navigate("OrderSuccess", { orderId: data.orderId });
-        }
-      } catch (backendError) {
-        console.error("Backend verification error:", backendError);
-        Alert.alert(
-          "Verification Error",
-          "Error verifying payment. Please try again."
-        );
+        navigation.navigate("OrderSuccess", { orderId: verifyJson.orderId });
+      } else if (result.status === "cancelled") {
+        Alert.alert("Payment", "Transaction cancelled.");
+      } else {
+        Alert.alert("Payment", "Transaction failed.");
       }
+    } catch (error: any) {
+      console.error("Flutterwave SDK error:", error);
+      Alert.alert(
+        "Payment error",
+        error?.message || "Unable to complete payment."
+      );
     }
   };
 
@@ -392,54 +410,9 @@ const CartScreen = () => {
             </Text>
           </View>
         </View>
-        {/* Modal for Flutterwave Payment */}
-        <Modal visible={showWebView} animationType="slide">
-          <View style={{ flex: 1 }}>
-            <View
-              style={{
-                height: 60,
-                backgroundColor: "rgb(0,20,77)",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingHorizontal: 16,
-              }}
-            >
-              <Text
-                style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
-              >
-                Payment
-              </Text>
-              <TouchableOpacity onPress={() => setShowWebView(false)}>
-                <Text style={{ color: "white", fontSize: 16 }}>Close</Text>
-              </TouchableOpacity>
-            </View>
-
-            <WebView
-              source={{ uri: checkoutUrl }}
-              startInLoadingState
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
-              originWhitelist={["*"]}
-              renderLoading={() => (
-                <View
-                  style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <ActivityIndicator size="large" color="#000" />
-                  <Text>Loading payment page...</Text>
-                </View>
-              )}
-              onNavigationStateChange={handleWebViewNavigationStateChange}
-            />
-          </View>
-        </Modal>
 
         <TouchableOpacity
-          onPress={handlePayment}
+          onPress={payWithFlutterwave}
           style={{
             backgroundColor: "rgb(0,20,77)",
             borderRadius: 10,
@@ -452,7 +425,7 @@ const CartScreen = () => {
           }}
         >
           <Text style={{ color: "white", fontSize: 13 }}>
-            Continue (₦ {subTotal})
+            Make Payment (₦ {subTotal})
           </Text>
         </TouchableOpacity>
       </View>
